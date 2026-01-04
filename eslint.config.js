@@ -20,6 +20,10 @@ export default [
         process: "readonly",
         fetch: "readonly",
         URLSearchParams: "readonly",
+        setTimeout: "readonly",
+        setInterval: "readonly",
+        clearTimeout: "readonly",
+        clearInterval: "readonly",
       },
     },
     plugins: {
@@ -37,12 +41,7 @@ export default [
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/consistent-type-assertions": [
-        "error",
-        {
-          assertionStyle: "never",
-        },
-      ],
+      "@typescript-eslint/consistent-type-assertions": ["error", { assertionStyle: "never" }],
       "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports" }],
       "no-console": "off",
     },

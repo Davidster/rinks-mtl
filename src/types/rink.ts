@@ -6,4 +6,6 @@ export interface Rink {
   readonly name: string;
   readonly hyperlink: string;
   readonly address: string;
+  readonly lat?: number;
+  readonly lng?: number;
 }

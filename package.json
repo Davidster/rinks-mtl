@@ -17,10 +17,12 @@
   },
   "dependencies": {
     "cheerio": "^1.1.2",
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "fuse.js": "^7.1.0"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.35",
+    "@types/google.maps": "^3.58.1",
     "@types/node": "^24.10.1",
     "@typescript-eslint/eslint-plugin": "^8.48.1",
     "@typescript-eslint/parser": "^8.48.1",
