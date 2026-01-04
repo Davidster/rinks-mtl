@@ -67,7 +67,7 @@ function initMap(): void {
   }
 
   createMarkers();
-  
+
   // Apply filters after markers are created
   applyFilter();
 }
@@ -333,9 +333,7 @@ function readUrlParams(): {
 } {
   const params = new URLSearchParams(window.location.search);
   const typesParam = params.get("types");
-  const selectedTypes = typesParam
-    ? typesParam.split(",").filter((t) => t.trim().length > 0)
-    : [];
+  const selectedTypes = typesParam ? typesParam.split(",").filter((t) => t.trim().length > 0) : [];
   return {
     showOpenOnly: params.get("open") === "true",
     showMultipleRinks: params.get("multiple") === "true",
@@ -385,9 +383,7 @@ function applyFilter(): void {
           return;
         }
         if (selectedTypes.length > 0) {
-          const hasMatchingType = marker.rinkData.some((r) =>
-            selectedTypes.includes(r.type)
-          );
+          const hasMatchingType = marker.rinkData.some((r) => selectedTypes.includes(r.type));
           if (!hasMatchingType) {
             marker.setMap(null);
             return;
@@ -439,8 +435,7 @@ function applyFilter(): void {
 
     const isOpen = element.getAttribute("data-is-open") === "true";
     const matches = matchedRinks.has(rinkIndex);
-    const matchesType =
-      selectedTypes.length === 0 || selectedTypes.includes(rink.type);
+    const matchesType = selectedTypes.length === 0 || selectedTypes.includes(rink.type);
     const shouldShow = (!showOpenOnly || isOpen) && matches && matchesType;
 
     if (shouldShow) {
@@ -522,9 +517,7 @@ function applyFilter(): void {
 
     // Check type filter
     if (selectedTypes.length > 0) {
-      const hasMatchingType = marker.rinkData.some((rink) =>
-        selectedTypes.includes(rink.type)
-      );
+      const hasMatchingType = marker.rinkData.some((rink) => selectedTypes.includes(rink.type));
       if (!hasMatchingType) {
         const isCurrentlyVisible = marker.getMap() !== null;
         if (isCurrentlyVisible) {
