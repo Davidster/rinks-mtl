@@ -8,11 +8,17 @@ const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url ?? "", true);
   const pathname = parsedUrl.pathname;
 
-  const handleRequest = () => {
+  const handleRequest = async () => {
     switch (pathname) {
       case "":
       case "/":
-        res.writeHead(200, { "Content-Type": "text/html" }).end(homePage());
+        try {
+          const html = await homePage();
+          res.writeHead(200, { "Content-Type": "text/html" }).end(html);
+        } catch (error) {
+          console.error("Error generating home page:", error);
+          res.writeHead(500).end("Internal Server Error");
+        }
         break;
 
       // Unknown route
