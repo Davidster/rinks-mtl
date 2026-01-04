@@ -649,6 +649,9 @@ async function init(): Promise<void> {
       geocodedCountElement.textContent = geocodedRinks.length.toString();
     }
 
+    // Read filter state from URL
+    const urlParams = readUrlParams();
+
     // Populate type filter dropdown
     const typeSelect = document.getElementById("type-filter") as HTMLSelectElement;
     if (typeSelect) {
@@ -666,7 +669,6 @@ async function init(): Promise<void> {
       });
 
       // Set selected types from URL
-      const urlParams = readUrlParams();
       if (urlParams.selectedTypes.length > 0) {
         Array.from(typeSelect.options).forEach((option) => {
           option.selected = urlParams.selectedTypes.includes(option.value);
@@ -676,8 +678,7 @@ async function init(): Promise<void> {
       typeSelect.addEventListener("change", applyFilter);
     }
 
-    // Read filter state from URL and apply it
-    const urlParams = readUrlParams();
+    // Set up other filter controls
     const checkbox = document.getElementById("show-open-only") as HTMLInputElement;
     const multipleRinksCheckbox = document.getElementById(
       "show-multiple-rinks"
@@ -693,8 +694,6 @@ async function init(): Promise<void> {
       multipleRinksCheckbox.checked = urlParams.showMultipleRinks;
       multipleRinksCheckbox.addEventListener("change", applyFilter);
     }
-
-    // typeSelect event listener is already set up above
 
     if (searchInput) {
       searchInput.value = urlParams.searchTerm;
