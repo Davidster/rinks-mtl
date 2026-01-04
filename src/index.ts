@@ -1,6 +1,7 @@
 import "dotenv/config";
 import http from "http";
 import url from "url";
+import open from "open";
 import { homePage } from "./pages/home.js";
 import { env } from "./env.js";
 
@@ -33,4 +34,9 @@ const server = http.createServer((req, res) => {
 
 server.listen(env.PORT, () => {
   console.info(`Server running at port ${env.PORT}`);
+  // Open browser automatically in dev mode
+  if (process.env.NODE_ENV !== "production") {
+    const url = `http://localhost:${env.PORT}`;
+    void open(url);
+  }
 });
