@@ -1,5 +1,6 @@
 import Fuse from "fuse.js";
 import type { FuseResultMatch, FuseResult } from "fuse.js";
+import { MarkerClusterer, GridAlgorithm } from "@googlemaps/markerclusterer";
 
 // Client-side type definitions (can't import from server-side types)
 interface Rink {
@@ -21,12 +22,16 @@ interface RinksResponse {
 
 interface MarkerWithData extends google.maps.Marker {
   rinkData: Rink[];
+  filteredRinkData: Rink[]; // Rinks that match current filters
   locationKey: string;
 }
 
 let markers: MarkerWithData[] = [];
 let infoWindows: google.maps.InfoWindow[] = [];
 let map: google.maps.Map | null = null;
+// MarkerClusterer is imported from CDN, types may not be fully available
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let clusterer: any = null;
 let geocodedRinks: readonly Rink[] = [];
 let allRinks: readonly Rink[] = [];
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -146,6 +151,125 @@ function createInfoWindowContent(rinks: readonly Rink[]): string {
   `;
 }
 
+interface PuckIconResult {
+  readonly url: string;
+  readonly width: number;
+  readonly height: number;
+  readonly anchorX: number;
+  readonly anchorY: number;
+}
+
+/**
+ * Creates a hockey puck SVG icon - 3D cylinder view.
+ * Uses a "background puck" technique with blur for colored glow.
+ * @param colors - Single color string or [leftColor, rightColor] for mixed glow
+ * @param size - Size of the puck
+ * @param uniqueId - Unique ID suffix for SVG defs (to avoid conflicts)
+ */
+function createHockeyPuckIcon(
+  colors: string | readonly [string, string],
+  size: number,
+  uniqueId?: string
+): PuckIconResult {
+  const isMixed = Array.isArray(colors);
+  const leftColor = isMixed ? colors[0] : colors;
+  const rightColor = isMixed ? colors[1] : colors;
+  const idSuffix =
+    uniqueId ?? (isMixed ? `${leftColor}-${rightColor}` : leftColor).replace(/#/g, "");
+
+  const radius = size / 2 - 4;
+  const cx = size / 2;
+  const puckHeight = radius * 0.6; // Height of the cylinder side
+  const topY = size / 2 - 2; // Top ellipse center
+  const ry = radius * 0.45; // Ellipse y-radius (perspective)
+  const bottomY = topY + puckHeight; // Bottom ellipse center
+  const glowSize = Math.max(2, size / 14); // Glow thickness
+
+  // Inner puck is slightly smaller
+  const innerRadius = radius - glowSize * 0.5;
+  const innerRy = ry - glowSize * 0.25;
+  const innerHeight = puckHeight - glowSize * 0.2;
+
+  const svgWidth = size + glowSize * 2;
+  const svgHeight = size + puckHeight + glowSize * 2;
+
+  // Build clip paths for mixed mode
+  const clipPathDefs = isMixed
+    ? `
+        <clipPath id="half-left-${idSuffix}">
+          <rect x="0" y="0" width="${cx + glowSize}" height="${svgHeight}"/>
+        </clipPath>
+        <clipPath id="half-right-${idSuffix}">
+          <rect x="${cx + glowSize}" y="0" width="${cx + glowSize}" height="${svgHeight}"/>
+        </clipPath>`
+    : "";
+
+  // Build glow elements
+  const glowElements = isMixed
+    ? `
+      <!-- OUTER (colored) puck with blur - half left -->
+      <g filter="url(#glow-${idSuffix})" clip-path="url(#half-left-${idSuffix})">
+        <rect x="${cx - radius + glowSize}" y="${topY + glowSize}" width="${radius * 2}" height="${puckHeight}" fill="${leftColor}"/>
+        <ellipse cx="${cx + glowSize}" cy="${bottomY + glowSize}" rx="${radius}" ry="${ry}" fill="${leftColor}"/>
+        <ellipse cx="${cx + glowSize}" cy="${topY + glowSize}" rx="${radius}" ry="${ry}" fill="${leftColor}"/>
+      </g>
+      
+      <!-- OUTER (colored) puck with blur - half right -->
+      <g filter="url(#glow-${idSuffix})" clip-path="url(#half-right-${idSuffix})">
+        <rect x="${cx - radius + glowSize}" y="${topY + glowSize}" width="${radius * 2}" height="${puckHeight}" fill="${rightColor}"/>
+        <ellipse cx="${cx + glowSize}" cy="${bottomY + glowSize}" rx="${radius}" ry="${ry}" fill="${rightColor}"/>
+        <ellipse cx="${cx + glowSize}" cy="${topY + glowSize}" rx="${radius}" ry="${ry}" fill="${rightColor}"/>
+      </g>`
+    : `
+      <!-- OUTER (colored) puck with blur - creates the glow -->
+      <g filter="url(#glow-${idSuffix})">
+        <rect x="${cx - radius + glowSize}" y="${topY + glowSize}" width="${radius * 2}" height="${puckHeight}" fill="${leftColor}"/>
+        <ellipse cx="${cx + glowSize}" cy="${bottomY + glowSize}" rx="${radius}" ry="${ry}" fill="${leftColor}"/>
+        <ellipse cx="${cx + glowSize}" cy="${topY + glowSize}" rx="${radius}" ry="${ry}" fill="${leftColor}"/>
+      </g>`;
+
+  // Create SVG with 3D hockey puck appearance
+  const svg = `
+    <svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        ${clipPathDefs}
+        <linearGradient id="side-gradient-${idSuffix}" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#3a3a3a;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#1a1a1a;stop-opacity:1" />
+        </linearGradient>
+        <filter id="glow-${idSuffix}" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="${glowSize * 0.6}" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+          </feMerge>
+        </filter>
+      </defs>
+      
+      ${glowElements}
+      
+      <!-- INNER (dark) puck - on top -->
+      <rect x="${cx - innerRadius + glowSize}" y="${topY + glowSize}" width="${innerRadius * 2}" height="${innerHeight}" fill="url(#side-gradient-${idSuffix})"/>
+      <ellipse cx="${cx + glowSize}" cy="${topY + innerHeight + glowSize}" rx="${innerRadius}" ry="${innerRy}" fill="#1a1a1a"/>
+      <ellipse cx="${cx + glowSize}" cy="${topY + glowSize}" rx="${innerRadius}" ry="${innerRy}" fill="#2a2a2a"/>
+      
+      <!-- Shine - tapered arc following near edge of ellipse, ~150 degrees -->
+      <path d="M ${cx - innerRadius * 0.96 + glowSize},${topY + innerRy * 0.26 + glowSize} 
+               A ${innerRadius},${innerRy} 0 0,0 ${cx + innerRadius * 0.96 + glowSize},${topY + innerRy * 0.26 + glowSize}
+               A ${innerRadius * 0.85},${innerRy * 0.75} 0 0,1 ${cx - innerRadius * 0.96 + glowSize},${topY + innerRy * 0.26 + glowSize}
+               Z" 
+            fill="rgba(255,255,255,0.45)"/>
+    </svg>
+  `;
+
+  return {
+    url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+    width: svgWidth,
+    height: svgHeight,
+    anchorX: svgWidth / 2,
+    anchorY: topY + glowSize, // Anchor at top of puck
+  };
+}
+
 /**
  * Creates markers for all geocoded rinks, grouping by location.
  */
@@ -154,7 +278,11 @@ function createMarkers(): void {
     return;
   }
 
-  // Clear existing markers
+  // Clear existing markers and clusterer
+  if (clusterer) {
+    clusterer.clearMarkers();
+    clusterer = null;
+  }
   markers.forEach((marker) => marker.setMap(null));
   markers = [];
   infoWindows = [];
@@ -182,7 +310,7 @@ function createMarkers(): void {
 
     // Determine marker color based on rinks (green if any open, red if all closed)
     const hasOpenRink = rinks.some((r) => r.isOpen);
-    const markerColor = hasOpenRink ? "#27ae60" : "#e74c3c";
+    const markerColor = hasOpenRink ? "#27ae60" : "#a93226"; // Darker red for closed
 
     // Create title with all rink names
     const title =
@@ -190,24 +318,26 @@ function createMarkers(): void {
         ? `${rinks.length} rinks: ${rinks.map((r) => r.name).join(", ")}`
         : firstRink.name;
 
+    // Create hockey puck icon
+    const iconSize = rinks.length > 1 ? 40 : 36; // Slightly larger if multiple rinks
+    const puckIcon = createHockeyPuckIcon(markerColor, iconSize);
+
     // Don't create info window content upfront - create it lazily on click
     const marker = new google.maps.Marker({
       position: { lat: firstRink.lat, lng: firstRink.lng },
       map: null, // Don't add to map yet, we'll filter
       title,
       icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: rinks.length > 1 ? 10 : 8, // Slightly larger if multiple rinks
-        fillColor: markerColor,
-        fillOpacity: 1,
-        strokeColor: "#ffffff",
-        strokeWeight: 2,
+        url: puckIcon.url,
+        scaledSize: new google.maps.Size(puckIcon.width, puckIcon.height),
+        anchor: new google.maps.Point(puckIcon.anchorX, puckIcon.anchorY),
       },
       optimized: true, // Use optimized rendering for better performance
     }) as MarkerWithData;
 
     // Store all rinks at this location
     marker.rinkData = rinks;
+    marker.filteredRinkData = rinks; // Initially all rinks pass filter
     marker.locationKey = locationKey;
 
     // Create info window lazily on click
@@ -225,6 +355,92 @@ function createMarkers(): void {
     });
 
     markers.push(marker);
+  }
+
+  // Initialize MarkerClusterer with all markers and custom renderer
+  if (markers.length > 0 && map) {
+    clusterer = new MarkerClusterer({
+      map,
+      markers,
+      algorithm: new GridAlgorithm({
+        gridSize: 100, // Larger grid cells for more aggressive clustering
+        maxZoom: 14, // Keep markers clustered until zoom level 14 or higher
+      }),
+      renderer: {
+        render: (cluster, _stats, _map) => {
+          // Count filtered rinks and determine color using pre-filtered data
+          let hasOpenRink = false;
+          let hasClosedRink = false;
+          let filteredRinkCount = 0;
+
+          for (const marker of cluster.markers) {
+            const markerWithData = marker as MarkerWithData;
+            if (markerWithData.filteredRinkData) {
+              for (const rink of markerWithData.filteredRinkData) {
+                filteredRinkCount++;
+                if (rink.isOpen) {
+                  hasOpenRink = true;
+                } else {
+                  hasClosedRink = true;
+                }
+              }
+            }
+          }
+
+          const isMixed = hasOpenRink && hasClosedRink;
+          // Create hockey puck icon for cluster
+          const clusterSize = 48;
+          const puckColors: string | readonly [string, string] = isMixed
+            ? (["#27ae60", "#a93226"] as const) // Green left, red right
+            : hasOpenRink
+              ? "#27ae60"
+              : "#a93226"; // Darker red for closed
+
+          const puckIcon = createHockeyPuckIcon(
+            puckColors,
+            clusterSize,
+            `cluster-${cluster.count}`
+          );
+
+          // Get position from cluster - calculate from markers if not available
+          let position: google.maps.LatLngLiteral = { lat: 0, lng: 0 };
+          if (cluster.position) {
+            const pos = cluster.position as google.maps.LatLng | google.maps.LatLngLiteral;
+            if (pos instanceof google.maps.LatLng) {
+              position = { lat: pos.lat(), lng: pos.lng() };
+            } else {
+              position = { lat: pos.lat, lng: pos.lng };
+            }
+          } else if (cluster.markers.length > 0) {
+            // Calculate center from markers
+            const firstMarker = cluster.markers[0] as MarkerWithData;
+            const markerPos = firstMarker.getPosition();
+            if (markerPos) {
+              position = { lat: markerPos.lat(), lng: markerPos.lng() };
+            }
+          }
+
+          // Create cluster marker
+          const clusterMarker = new google.maps.Marker({
+            position: position,
+            icon: {
+              url: puckIcon.url,
+              scaledSize: new google.maps.Size(puckIcon.width, puckIcon.height),
+              anchor: new google.maps.Point(puckIcon.anchorX, puckIcon.anchorY),
+            },
+            label: {
+              text: filteredRinkCount.toString(),
+              color: "#ffffff",
+              fontSize: "12px",
+              fontWeight: "bold",
+            },
+            zIndex: Number(google.maps.Marker.MAX_ZINDEX) + cluster.count,
+          });
+
+          return clusterMarker;
+        },
+      },
+    });
   }
 
   // Apply initial filter
@@ -353,9 +569,10 @@ function applyFilter(): void {
   const typeSelect = document.getElementById("type-filter") as HTMLSelectElement;
   if (!checkbox || !multipleRinksCheckbox || !typeSelect || allRinks.length === 0) {
     // If no rinks data yet, show all markers (no filtering)
-    markers.forEach((marker) => {
-      marker.setMap(map);
-    });
+    if (clusterer && map && markers.length > 0) {
+      clusterer.clearMarkers();
+      clusterer.addMarkers(markers);
+    }
     return;
   }
 
@@ -446,6 +663,9 @@ function applyFilter(): void {
     }
   });
 
+  // Update modal list after filtering
+  updateModalRinksList();
+
   // Sort by relevance score (lower is better) and then by index for stable sorting
   visibleElements.sort((a, b) => {
     if (a.score !== b.score) {
@@ -504,57 +724,51 @@ function applyFilter(): void {
     }
   }
 
-  // Filter map markers - optimized to avoid unnecessary setMap calls
+  // Filter map markers and update clusterer
+  const visibleMarkers: MarkerWithData[] = [];
+
   markers.forEach((marker) => {
-    // Check multiple rinks filter first (fast check)
-    if (showMultipleRinks && marker.rinkData.length <= 1) {
-      const isCurrentlyVisible = marker.getMap() !== null;
-      if (isCurrentlyVisible) {
-        marker.setMap(null);
+    // Compute filtered rinks for this marker
+    const filteredRinks = marker.rinkData.filter((rink) => {
+      // Check type filter
+      if (selectedTypes.length > 0 && !selectedTypes.includes(rink.type)) {
+        return false;
       }
+
+      // Check search filter
+      const rinkKey = `${rink.name}|${rink.address}|${rink.type}`;
+      const rinkIndex = rinkIndexMap.get(rinkKey);
+      if (rinkIndex === undefined || !matchedRinks.has(rinkIndex)) {
+        return false;
+      }
+
+      // Check open filter
+      if (showOpenOnly && !rink.isOpen) {
+        return false;
+      }
+
+      return true;
+    });
+
+    // Update marker's filtered rink data
+    marker.filteredRinkData = filteredRinks;
+
+    // Check multiple rinks filter (based on filtered count)
+    if (showMultipleRinks && filteredRinks.length <= 1) {
       return;
     }
 
-    // Check type filter
-    if (selectedTypes.length > 0) {
-      const hasMatchingType = marker.rinkData.some((rink) => selectedTypes.includes(rink.type));
-      if (!hasMatchingType) {
-        const isCurrentlyVisible = marker.getMap() !== null;
-        if (isCurrentlyVisible) {
-          marker.setMap(null);
-        }
-        return;
-      }
-    }
-
-    // Check if any rink at this location matches the filters
-    // Use the pre-built index map for O(1) lookup instead of O(n) findIndex
-    let hasMatchingRink = false;
-    let hasOpenRink = false;
-
-    for (const rink of marker.rinkData) {
-      const rinkKey = `${rink.name}|${rink.address}|${rink.type}`;
-      const rinkIndex = rinkIndexMap.get(rinkKey);
-
-      if (rinkIndex !== undefined && matchedRinks.has(rinkIndex)) {
-        hasMatchingRink = true;
-        if (rink.isOpen) {
-          hasOpenRink = true;
-          break; // Early exit if we found an open rink
-        }
-      }
-    }
-
-    const shouldShow = hasMatchingRink && (!showOpenOnly || hasOpenRink);
-    const isCurrentlyVisible = marker.getMap() !== null;
-
-    // Only call setMap if visibility state changed
-    if (shouldShow && !isCurrentlyVisible) {
-      marker.setMap(map);
-    } else if (!shouldShow && isCurrentlyVisible) {
-      marker.setMap(null);
+    // Show marker if it has any filtered rinks
+    if (filteredRinks.length > 0) {
+      visibleMarkers.push(marker);
     }
   });
+
+  // Update clusterer with visible markers
+  if (clusterer && map) {
+    clusterer.clearMarkers();
+    clusterer.addMarkers(visibleMarkers);
+  }
 }
 
 /**
@@ -576,13 +790,23 @@ function handleSearch(): void {
  */
 function updateClearButton(): void {
   const searchInput = document.getElementById("search-input") as HTMLInputElement;
+  const modalSearchInput = document.getElementById("modal-search-input") as HTMLInputElement;
   const clearButton = document.getElementById("search-clear");
+  const modalClearButton = document.getElementById("modal-search-clear");
 
   if (searchInput && clearButton) {
     if (searchInput.value.trim()) {
       clearButton.classList.remove("hidden");
     } else {
       clearButton.classList.add("hidden");
+    }
+  }
+
+  if (modalSearchInput && modalClearButton) {
+    if (modalSearchInput.value.trim()) {
+      modalClearButton.classList.remove("hidden");
+    } else {
+      modalClearButton.classList.add("hidden");
     }
   }
 }
@@ -592,10 +816,129 @@ function updateClearButton(): void {
  */
 function clearSearch(): void {
   const searchInput = document.getElementById("search-input") as HTMLInputElement;
+  const modalSearchInput = document.getElementById("modal-search-input") as HTMLInputElement;
   if (searchInput) {
     searchInput.value = "";
-    updateClearButton();
-    applyFilter();
+  }
+  if (modalSearchInput) {
+    modalSearchInput.value = "";
+  }
+  updateClearButton();
+  applyFilter();
+}
+
+/**
+ * Opens the mobile filter modal.
+ */
+function openModal(): void {
+  const overlay = document.getElementById("modal-overlay");
+  if (overlay) {
+    overlay.classList.add("open");
+    document.body.style.overflow = "hidden"; // Prevent body scroll
+    syncFiltersToModal();
+  }
+}
+
+/**
+ * Closes the mobile filter modal.
+ */
+function closeModal(): void {
+  const overlay = document.getElementById("modal-overlay");
+  if (overlay) {
+    overlay.classList.remove("open");
+    document.body.style.overflow = ""; // Restore body scroll
+  }
+}
+
+/**
+ * Syncs desktop filter values to modal filters.
+ */
+function syncFiltersToModal(): void {
+  const desktopCheckbox = document.getElementById("show-open-only") as HTMLInputElement;
+  const desktopMultipleCheckbox = document.getElementById(
+    "show-multiple-rinks"
+  ) as HTMLInputElement;
+  const desktopTypeSelect = document.getElementById("type-filter") as HTMLSelectElement;
+  const desktopSearchInput = document.getElementById("search-input") as HTMLInputElement;
+
+  const modalCheckbox = document.getElementById("modal-show-open-only") as HTMLInputElement;
+  const modalMultipleCheckbox = document.getElementById(
+    "modal-show-multiple-rinks"
+  ) as HTMLInputElement;
+  const modalTypeSelect = document.getElementById("modal-type-filter") as HTMLSelectElement;
+  const modalSearchInput = document.getElementById("modal-search-input") as HTMLInputElement;
+
+  if (desktopCheckbox && modalCheckbox) {
+    modalCheckbox.checked = desktopCheckbox.checked;
+  }
+  if (desktopMultipleCheckbox && modalMultipleCheckbox) {
+    modalMultipleCheckbox.checked = desktopMultipleCheckbox.checked;
+  }
+  if (desktopTypeSelect && modalTypeSelect) {
+    // Sync type selections
+    Array.from(desktopTypeSelect.options).forEach((option, index) => {
+      if (modalTypeSelect.options[index]) {
+        modalTypeSelect.options[index].selected = option.selected;
+      }
+    });
+  }
+  if (desktopSearchInput && modalSearchInput) {
+    modalSearchInput.value = desktopSearchInput.value;
+  }
+
+  // Update modal rinks list
+  updateModalRinksList();
+}
+
+/**
+ * Syncs modal filter values to desktop filters and applies them.
+ */
+function syncFiltersFromModal(): void {
+  const desktopCheckbox = document.getElementById("show-open-only") as HTMLInputElement;
+  const desktopMultipleCheckbox = document.getElementById(
+    "show-multiple-rinks"
+  ) as HTMLInputElement;
+  const desktopTypeSelect = document.getElementById("type-filter") as HTMLSelectElement;
+  const desktopSearchInput = document.getElementById("search-input") as HTMLInputElement;
+
+  const modalCheckbox = document.getElementById("modal-show-open-only") as HTMLInputElement;
+  const modalMultipleCheckbox = document.getElementById(
+    "modal-show-multiple-rinks"
+  ) as HTMLInputElement;
+  const modalTypeSelect = document.getElementById("modal-type-filter") as HTMLSelectElement;
+  const modalSearchInput = document.getElementById("modal-search-input") as HTMLInputElement;
+
+  if (modalCheckbox && desktopCheckbox) {
+    desktopCheckbox.checked = modalCheckbox.checked;
+  }
+  if (modalMultipleCheckbox && desktopMultipleCheckbox) {
+    desktopMultipleCheckbox.checked = modalMultipleCheckbox.checked;
+  }
+  if (modalTypeSelect && desktopTypeSelect) {
+    // Sync type selections
+    Array.from(modalTypeSelect.options).forEach((option, index) => {
+      if (desktopTypeSelect.options[index]) {
+        desktopTypeSelect.options[index].selected = option.selected;
+      }
+    });
+  }
+  if (modalSearchInput && desktopSearchInput) {
+    desktopSearchInput.value = modalSearchInput.value;
+  }
+
+  applyFilter();
+}
+
+/**
+ * Updates the rinks list in the modal to match the filtered results.
+ */
+function updateModalRinksList(): void {
+  const desktopList = document.getElementById("rinks-list");
+  const modalList = document.getElementById("modal-rinks-list");
+
+  if (desktopList && modalList) {
+    // Clone the filtered rinks from desktop list to modal
+    modalList.innerHTML = desktopList.innerHTML;
   }
 }
 
@@ -698,6 +1041,73 @@ async function init(): Promise<void> {
     if (clearButton) {
       clearButton.addEventListener("click", clearSearch);
       updateClearButton();
+    }
+
+    // Set up modal handlers
+    const floatingFilterBtn = document.getElementById("floating-filter-btn");
+    const modalOverlay = document.getElementById("modal-overlay");
+    const modalClose = document.getElementById("modal-close");
+
+    if (floatingFilterBtn) {
+      floatingFilterBtn.addEventListener("click", openModal);
+    }
+
+    if (modalClose) {
+      modalClose.addEventListener("click", closeModal);
+    }
+
+    if (modalOverlay) {
+      modalOverlay.addEventListener("click", (e) => {
+        if (e.target === modalOverlay) {
+          closeModal();
+        }
+      });
+    }
+
+    // Set up modal filter controls to sync with desktop
+    const modalCheckbox = document.getElementById("modal-show-open-only") as HTMLInputElement;
+    const modalMultipleCheckbox = document.getElementById(
+      "modal-show-multiple-rinks"
+    ) as HTMLInputElement;
+    const modalTypeSelect = document.getElementById("modal-type-filter") as HTMLSelectElement;
+    const modalSearchInput = document.getElementById("modal-search-input") as HTMLInputElement;
+    const modalSearchClear = document.getElementById("modal-search-clear");
+
+    if (modalCheckbox) {
+      modalCheckbox.addEventListener("change", () => {
+        syncFiltersFromModal();
+      });
+    }
+
+    if (modalMultipleCheckbox) {
+      modalMultipleCheckbox.addEventListener("change", () => {
+        syncFiltersFromModal();
+      });
+    }
+
+    if (modalTypeSelect) {
+      // Populate modal type select
+      allTypes.forEach((type) => {
+        const option = document.createElement("option");
+        option.value = type;
+        option.textContent = type;
+        modalTypeSelect.appendChild(option);
+      });
+
+      modalTypeSelect.addEventListener("change", () => {
+        syncFiltersFromModal();
+      });
+    }
+
+    if (modalSearchInput) {
+      modalSearchInput.addEventListener("input", () => {
+        syncFiltersFromModal();
+        handleSearch();
+      });
+    }
+
+    if (modalSearchClear) {
+      modalSearchClear.addEventListener("click", clearSearch);
     }
 
     // Handle browser back/forward navigation

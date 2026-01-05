@@ -45,7 +45,8 @@ export async function homePage(): Promise<string> {
   <script type="importmap">
     {
       "imports": {
-        "fuse.js": "https://esm.sh/fuse.js@7"
+        "fuse.js": "https://esm.sh/fuse.js@7",
+        "@googlemaps/markerclusterer": "https://esm.sh/@googlemaps/markerclusterer@2"
       }
     }
   </script>
@@ -254,6 +255,132 @@ export async function homePage(): Promise<string> {
     .rink strong {
       color: #2c3e50;
     }
+    /* Floating filter button - hidden on desktop */
+    .floating-filter-btn {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      z-index: 1000;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s, transform 0.2s;
+    }
+    .floating-filter-btn:hover {
+      background-color: #2980b9;
+      transform: scale(1.05);
+    }
+    .floating-filter-btn:active {
+      transform: scale(0.95);
+    }
+    /* Modal overlay */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .modal-overlay.open {
+      display: block;
+      opacity: 1;
+    }
+    /* Modal content */
+    .modal-content {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-radius: 20px 20px 0 0;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      z-index: 2001;
+    }
+    .modal-overlay.open .modal-content {
+      transform: translateY(0);
+    }
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .modal-header h2 {
+      margin: 0;
+      color: #2c3e50;
+      font-size: 1.2em;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #999;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background-color 0.2s;
+    }
+    .modal-close:hover {
+      background-color: #f0f0f0;
+    }
+    .modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    /* Mobile responsive styles */
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+      .floating-filter-btn {
+        display: flex;
+      }
+      .main-container {
+        flex-direction: column;
+      }
+      .main-content {
+        padding: 10px;
+      }
+      .map-container {
+        height: calc(100vh - 60px);
+      }
+      h1 {
+        font-size: 1.3em;
+        margin-bottom: 10px;
+      }
+      .stats {
+        padding: 10px;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+      }
+    }
   </style>
 </head>
 <body>
@@ -292,6 +419,46 @@ export async function homePage(): Promise<string> {
       <div class="rinks-list-container">
         <div class="rinks-list" id="rinks-list">
           ${rinksHtml}
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Floating filter button for mobile -->
+  <button class="floating-filter-btn" id="floating-filter-btn" aria-label="Open filters">
+    ☰
+  </button>
+  <!-- Modal for mobile filters and results -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Filters & Results</h2>
+        <button class="modal-close" id="modal-close" aria-label="Close modal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="filter-controls">
+          <label>
+            <input type="checkbox" id="modal-show-open-only" />
+            <span>Show only open rinks</span>
+          </label>
+          <label>
+            <input type="checkbox" id="modal-show-multiple-rinks" />
+            <span>Show only locations with multiple rinks</span>
+          </label>
+        </div>
+        <div class="type-filter">
+          <label for="modal-type-filter">Filter by type:</label>
+          <select id="modal-type-filter" multiple size="4">
+            <option value="">All types</option>
+          </select>
+        </div>
+        <div class="search-box">
+          <input type="text" id="modal-search-input" placeholder="Search rinks..." />
+          <button type="button" class="search-box-clear hidden" id="modal-search-clear" aria-label="Clear search">×</button>
+        </div>
+        <div class="rinks-list-container">
+          <div class="rinks-list" id="modal-rinks-list">
+            ${rinksHtml}
+          </div>
         </div>
       </div>
     </div>

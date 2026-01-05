@@ -24,6 +24,16 @@ export default [
         setInterval: "readonly",
         clearTimeout: "readonly",
         clearInterval: "readonly",
+        // Browser globals
+        google: "readonly",
+        document: "readonly",
+        window: "readonly",
+        HTMLElement: "readonly",
+        HTMLInputElement: "readonly",
+        HTMLSelectElement: "readonly",
+        HTMLOptionElement: "readonly",
+        HTMLButtonElement: "readonly",
+        Element: "readonly",
       },
     },
     plugins: {
@@ -44,6 +54,19 @@ export default [
       "@typescript-eslint/consistent-type-assertions": ["error", { assertionStyle: "never" }],
       "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports" }],
       "no-console": "off",
+    },
+  },
+  {
+    files: ["src/public/**/*.ts"],
+    rules: {
+      // Allow type assertions for DOM elements in client-side code
+      "@typescript-eslint/consistent-type-assertions": "off",
+      // Allow unsafe member access for DOM APIs
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
     },
   },
   {
