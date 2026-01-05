@@ -56,12 +56,19 @@ const MONTH_NAMES_FR: ReadonlyMap<string, number> = new Map([
  * Parses the last updated timestamp string into a Date object.
  * Handles formats like "January 4 - 10:10 am" (English) or "4 janvier à 13 h 05" (French)
  * Year logic: if month is after September, use previous year; otherwise use current year.
+ * Times are interpreted as Montreal time (America/Montreal, Eastern Time).
  */
 function parseLastUpdated(timestampText: string, isFrench: boolean): Date | null {
   const trimmed = timestampText.trim();
   if (!trimmed) {
     return null; // Return null if empty
   }
+
+  let year: number;
+  let monthNum: number;
+  let day: number;
+  let hour: number;
+  let minute: number;
 
   if (isFrench) {
     // French format: "4 janvier à 13 h 05" or "30 décembre à 6 h 03"
@@ -71,20 +78,15 @@ function parseLastUpdated(timestampText: string, isFrench: boolean): Date | null
     }
 
     const [, dayStr, monthName, hourStr, minuteStr] = match;
-    const monthNum = MONTH_NAMES_FR.get(monthName.toLowerCase());
-    if (monthNum === undefined) {
+    const foundMonthNum = MONTH_NAMES_FR.get(monthName.toLowerCase());
+    if (foundMonthNum === undefined) {
       return null; // Fallback if month not recognized
     }
 
-    const day = Number.parseInt(dayStr, 10);
-    const hour = Number.parseInt(hourStr, 10);
-    const minute = Number.parseInt(minuteStr, 10);
-
-    // Determine year: if month is after September (October, November, December), use previous year
-    const currentYear = new Date().getFullYear();
-    const year = monthNum > 8 ? currentYear - 1 : currentYear;
-
-    return new Date(year, monthNum, day, hour, minute);
+    day = Number.parseInt(dayStr, 10);
+    hour = Number.parseInt(hourStr, 10);
+    minute = Number.parseInt(minuteStr, 10);
+    monthNum = foundMonthNum;
   } else {
     // English format: "January 4 - 10:10 am" or "December 31 - 12:06 pm"
     const match = trimmed.match(/^(\w+)\s+(\d+)\s*-\s*(\d+):(\d+)\s*(am|pm)$/i);
@@ -93,14 +95,15 @@ function parseLastUpdated(timestampText: string, isFrench: boolean): Date | null
     }
 
     const [, monthName, dayStr, hourStr, minuteStr, amPm] = match;
-    const monthNum = MONTH_NAMES_EN.get(monthName.toLowerCase());
-    if (monthNum === undefined) {
+    const foundMonthNum = MONTH_NAMES_EN.get(monthName.toLowerCase());
+    if (foundMonthNum === undefined) {
       return null; // Fallback if month not recognized
     }
 
-    const day = Number.parseInt(dayStr, 10);
-    let hour = Number.parseInt(hourStr, 10);
-    const minute = Number.parseInt(minuteStr, 10);
+    day = Number.parseInt(dayStr, 10);
+    hour = Number.parseInt(hourStr, 10);
+    minute = Number.parseInt(minuteStr, 10);
+    monthNum = foundMonthNum;
 
     // Convert to 24-hour format
     if (amPm.toLowerCase() === "pm" && hour !== 12) {
@@ -108,13 +111,18 @@ function parseLastUpdated(timestampText: string, isFrench: boolean): Date | null
     } else if (amPm.toLowerCase() === "am" && hour === 12) {
       hour = 0;
     }
-
-    // Determine year: if month is after September (October, November, December), use previous year
-    const currentYear = new Date().getFullYear();
-    const year = monthNum > 8 ? currentYear - 1 : currentYear;
-
-    return new Date(year, monthNum, day, hour, minute);
   }
+
+  // Determine year: if month is after September (October, November, December), use previous year
+  const currentYear = new Date().getFullYear();
+  year = monthNum > 8 ? currentYear - 1 : currentYear;
+
+  // Create date string in ISO format with Montreal timezone (EST, UTC-5)
+  // Skating rinks are only relevant in winter, so we always use EST offset
+  const dateStr = `${year}-${String(monthNum + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00-05:00`;
+
+  // Create date with explicit timezone offset (EST, UTC-5)
+  return new Date(dateStr);
 }
 
 /**
