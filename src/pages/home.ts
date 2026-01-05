@@ -98,6 +98,10 @@ export function homePage(lang: Language = "fr"): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.svg">
+  
   <!-- Primary SEO Meta Tags -->
   <title>${t.siteTitle}</title>
   <meta name="title" content="${t.siteTitle}">

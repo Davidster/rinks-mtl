@@ -17,17 +17,42 @@ const __dirname = dirname(__filename);
 const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url ?? "", true);
   const pathname = parsedUrl.pathname;
+  const clientIp = req.socket.remoteAddress ?? "unknown";
+  const userAgent = req.headers["user-agent"] ?? "unknown";
 
   const handleRequest = async () => {
     // API endpoint for rinks data
     if (pathname === "/api/rinks") {
       try {
         const rinks = await getGeocodedRinks();
+        console.info(`[API] /api/rinks - IP: ${clientIp} - User-Agent: ${userAgent}`);
         res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify({ rinks }));
         return;
       } catch (error) {
-        console.error("Error handling rinks request:", error);
+        console.error(`[API] /api/rinks - Error - IP: ${clientIp}`, error);
         res.writeHead(500).end(JSON.stringify({ error: "Internal Server Error" }));
+        return;
+      }
+    }
+
+    // Favicon
+    if (pathname === "/favicon.svg" || pathname === "/favicon.ico") {
+      try {
+        // Try dist first (production), then src (dev mode)
+        const distPath = join(__dirname, "..", "dist", "public", "favicon.svg");
+        const srcPath = join(__dirname, "..", "src", "public", "favicon.svg");
+        const filePath = existsSync(distPath) ? distPath : srcPath;
+
+        if (!existsSync(filePath)) {
+          res.writeHead(404).end("Not Found");
+          return;
+        }
+        const fileContent = readFileSync(filePath);
+        res.writeHead(200, { "Content-Type": "image/svg+xml" }).end(fileContent);
+        return;
+      } catch (error) {
+        console.error("Error serving favicon:", error);
+        res.writeHead(500).end("Internal Server Error");
         return;
       }
     }
@@ -102,7 +127,19 @@ Sitemap: ${env.SITE_URL}/sitemap.xml
 
     // Redirect root to default language (French), preserving query params
     if (pathname === "" || pathname === "/") {
-      const queryString = parsedUrl.query ? `?${new URLSearchParams(parsedUrl.query as Record<string, string>).toString()}` : "";
+      let queryString = "";
+      if (parsedUrl.query && typeof parsedUrl.query === "object") {
+        const params = new URLSearchParams();
+        for (const [key, value] of Object.entries(parsedUrl.query)) {
+          if (typeof value === "string") {
+            params.set(key, value);
+          } else if (Array.isArray(value)) {
+            params.set(key, value[0] ?? "");
+          }
+        }
+        const queryStr = params.toString();
+        queryString = queryStr ? `?${queryStr}` : "";
+      }
       res.writeHead(302, { Location: `/fr${queryString}` }).end();
       return;
     }
@@ -116,10 +153,11 @@ Sitemap: ${env.SITE_URL}/sitemap.xml
           return;
         }
         const html = homePage(lang);
+        console.info(`[VISIT] /${lang} - IP: ${clientIp} - User-Agent: ${userAgent}`);
         res.writeHead(200, { "Content-Type": "text/html" }).end(html);
         return;
       } catch (error) {
-        console.error("Error generating home page:", error);
+        console.error(`[VISIT] /${pathname} - Error - IP: ${clientIp}`, error);
         res.writeHead(500).end("Internal Server Error");
         return;
       }
