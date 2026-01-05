@@ -95,6 +95,7 @@ export async function parseMontrealRinks(): Promise<readonly Rink[]> {
   }
 
   // Cache expired or doesn't exist, fetch fresh data
+  console.info(`[FETCH] Re-fetching Montreal rinks site: ${MONTREAL_RINKS_URL}`);
   const response = await fetch(MONTREAL_RINKS_URL);
 
   if (!response.ok) {
@@ -184,5 +185,6 @@ export async function parseMontrealRinks(): Promise<readonly Rink[]> {
     timestamp: Date.now(),
   };
 
+  console.info(`[FETCH] Successfully parsed ${rinks.length} rinks from Montreal site`);
   return rinks;
 }

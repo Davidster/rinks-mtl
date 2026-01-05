@@ -144,10 +144,14 @@ export async function geocodeAddresses(
 
   // Geocode addresses not in cache (with a small delay to respect rate limits)
   for (const address of addressesToGeocode) {
+    console.info(`[GEOCODE] Geocoding new address: ${address}`);
     const geocodingData = await geocodeAddress(address);
     if (geocodingData) {
       result.set(address, geocodingData);
       updatedCache[address] = geocodingData;
+      console.info(`[GEOCODE] Successfully geocoded: ${address} -> (${geocodingData.lat}, ${geocodingData.lng})`);
+    } else {
+      console.warn(`[GEOCODE] Failed to geocode address: ${address}`);
     }
 
     // Small delay to avoid hitting rate limits
