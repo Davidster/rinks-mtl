@@ -14,11 +14,62 @@ interface CacheEntry {
 let cache: CacheEntry | null = null;
 
 /**
- * Parses the last updated timestamp string.
- * Handles formats like "January 4 - 11:14 am" or "December 16 - 11:38 am"
+ * Month name to number mapping.
  */
-function parseLastUpdated(timestampText: string): string {
-  return timestampText.trim();
+const MONTH_NAMES: ReadonlyMap<string, number> = new Map([
+  ["january", 0],
+  ["february", 1],
+  ["march", 2],
+  ["april", 3],
+  ["may", 4],
+  ["june", 5],
+  ["july", 6],
+  ["august", 7],
+  ["september", 8],
+  ["october", 9],
+  ["november", 10],
+  ["december", 11],
+]);
+
+/**
+ * Parses the last updated timestamp string into a Date object.
+ * Handles formats like "January 4 - 10:10 am" or "December 31 - 12:06 pm"
+ * Year logic: if month is after September, use previous year; otherwise use current year.
+ */
+function parseLastUpdated(timestampText: string): Date {
+  const trimmed = timestampText.trim();
+  if (!trimmed) {
+    return new Date(); // Fallback to current date if empty
+  }
+
+  // Match pattern like "January 4 - 10:10 am" or "December 31 - 12:06 pm"
+  const match = trimmed.match(/^(\w+)\s+(\d+)\s*-\s*(\d+):(\d+)\s*(am|pm)$/i);
+  if (!match) {
+    return new Date(); // Fallback if parsing fails
+  }
+
+  const [, monthName, dayStr, hourStr, minuteStr, amPm] = match;
+  const monthNum = MONTH_NAMES.get(monthName.toLowerCase());
+  if (monthNum === undefined) {
+    return new Date(); // Fallback if month not recognized
+  }
+
+  const day = Number.parseInt(dayStr, 10);
+  let hour = Number.parseInt(hourStr, 10);
+  const minute = Number.parseInt(minuteStr, 10);
+
+  // Convert to 24-hour format
+  if (amPm.toLowerCase() === "pm" && hour !== 12) {
+    hour += 12;
+  } else if (amPm.toLowerCase() === "am" && hour === 12) {
+    hour = 0;
+  }
+
+  // Determine year: if month is after September (October, November, December), use previous year
+  const currentYear = new Date().getFullYear();
+  const year = monthNum > 8 ? currentYear - 1 : currentYear;
+
+  return new Date(year, monthNum, day, hour, minute);
 }
 
 /**
@@ -93,8 +144,12 @@ export async function parseMontrealRinks(): Promise<readonly Rink[]> {
       /Last updated\s+(\w+\s+\d+\s*-\s*\d+:\d+\s*(?:am|pm))/i
     );
     let lastUpdatedRaw = "";
+    let lastUpdated = new Date(); // Default to current date
     if (lastUpdatedMatch) {
-      lastUpdatedRaw = parseLastUpdated(lastUpdatedMatch[1] || "");
+      lastUpdatedRaw = lastUpdatedMatch[1]?.trim() || "";
+      if (lastUpdatedRaw) {
+        lastUpdated = parseLastUpdated(lastUpdatedRaw);
+      }
     }
 
     // Name and hyperlink: Second .list-group-info-item > .list-item-action > a
@@ -114,6 +169,7 @@ export async function parseMontrealRinks(): Promise<readonly Rink[]> {
         type,
         iceStatus,
         lastUpdatedRaw: lastUpdatedRaw,
+        lastUpdated,
         isOpen: determineIsOpen(iceStatus),
         name: name || "Unknown",
         hyperlink: hyperlink || MONTREAL_RINKS_URL,

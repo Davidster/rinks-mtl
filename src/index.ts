@@ -65,7 +65,7 @@ const server = http.createServer((req, res) => {
     // Home page
     if (pathname === "" || pathname === "/") {
       try {
-        const html = await homePage();
+        const html = homePage();
         res.writeHead(200, { "Content-Type": "text/html" }).end(html);
         return;
       } catch (error) {

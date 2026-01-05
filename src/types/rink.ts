@@ -2,6 +2,7 @@ export interface Rink {
   readonly type: string;
   readonly iceStatus: string;
   readonly lastUpdatedRaw: string;
+  readonly lastUpdated: Date;
   readonly isOpen: boolean;
   readonly name: string;
   readonly hyperlink: string;

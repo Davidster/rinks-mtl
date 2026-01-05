@@ -11,6 +11,7 @@ function generateFiltersHtml(prefix: string): string {
   const openCheckboxId = `${idPrefix}show-open-only`;
   const multipleCheckboxId = `${idPrefix}show-multiple-rinks`;
   const typeSelectId = `${idPrefix}type-filter`;
+  const lastUpdatedSelectId = `${idPrefix}last-updated-filter`;
 
   return `
         <div class="search-box">
@@ -28,8 +29,19 @@ function generateFiltersHtml(prefix: string): string {
           </label>
         </div>
         <div class="type-filter">
-          <label for="${typeSelectId}">Filter by type (hold Ctrl/Cmd to select multiple):</label>
-          <select id="${typeSelectId}" multiple size="4">
+          <label>Rink type:</label>
+          <div id="${typeSelectId}" class="type-checkboxes">
+            <!-- Type checkboxes will be populated by JavaScript -->
+          </div>
+        </div>
+        <div class="type-filter">
+          <label for="${lastUpdatedSelectId}">Recent maintenance:</label>
+          <select id="${lastUpdatedSelectId}">
+            <option value="all">All time</option>
+            <option value="4h">Last 4 hours</option>
+            <option value="12h">Last 12 hours</option>
+            <option value="24h">Last 24 hours</option>
+            <option value="7d">Last 7 days</option>
           </select>
         </div>
   `;
@@ -58,10 +70,13 @@ export function homePage(): string {
     * {
       box-sizing: border-box;
     }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    html, body {
+      height: 100%;
       margin: 0;
       padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       background-color: #f5f5f5;
     }
     .main-container {
@@ -155,6 +170,32 @@ export function homePage(): string {
     .type-filter select:focus {
       outline: none;
       border-color: #3498db;
+    }
+    .type-checkboxes {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: white;
+    }
+    .type-checkboxes label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 0.9em;
+      color: #555;
+      margin: 0;
+    }
+    .type-checkboxes input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      margin: 0;
     }
     .search-box {
       margin-top: 15px;
@@ -375,6 +416,11 @@ export function homePage(): string {
     }
     /* Mobile responsive styles */
     @media (max-width: 768px) {
+      html, body {
+        overflow: hidden;
+        height: 100vh;
+        height: 100dvh; /* Use dynamic viewport height for mobile browsers */
+      }
       .sidebar {
         display: none;
       }
@@ -383,21 +429,36 @@ export function homePage(): string {
       }
       .main-container {
         flex-direction: column;
+        height: 100vh;
+        height: 100dvh; /* Use dynamic viewport height for mobile browsers */
+        overflow: hidden;
       }
       .main-content {
         padding: 10px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        flex: 1;
+        min-height: 0;
       }
       .map-container {
-        height: calc(100vh - 60px);
+        flex: 1;
+        min-height: 0;
+        height: 0; /* Force flexbox to calculate height */
       }
       h1 {
         font-size: 1.3em;
         margin-bottom: 10px;
+        flex-shrink: 0;
       }
       .stats {
         padding: 10px;
         margin-bottom: 10px;
         font-size: 0.9em;
+        flex-shrink: 0;
+      }
+      .error {
+        flex-shrink: 0;
       }
     }
   </style>

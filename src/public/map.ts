@@ -7,6 +7,7 @@ interface Rink {
   readonly type: string;
   readonly iceStatus: string;
   readonly lastUpdatedRaw: string;
+  readonly lastUpdated: string; // ISO date string
   readonly isOpen: boolean;
   readonly name: string;
   readonly hyperlink: string;
@@ -553,7 +554,8 @@ function updateUrlParams(
   showOpenOnly: boolean,
   showMultipleRinks: boolean,
   selectedTypes: readonly string[],
-  searchTerm: string
+  searchTerm: string,
+  lastUpdatedFilter: LastUpdatedFilter
 ): void {
   const params = new URLSearchParams();
 
@@ -573,6 +575,10 @@ function updateUrlParams(
     params.set("search", searchTerm);
   }
 
+  if (lastUpdatedFilter !== "all") {
+    params.set("updated", lastUpdatedFilter);
+  }
+
   const newUrl = params.toString()
     ? `${window.location.pathname}?${params.toString()}`
     : window.location.pathname;
@@ -588,23 +594,36 @@ function readUrlParams(): {
   showMultipleRinks: boolean;
   selectedTypes: readonly string[];
   searchTerm: string;
+  lastUpdatedFilter: LastUpdatedFilter;
 } {
   const params = new URLSearchParams(window.location.search);
   const typesParam = params.get("types");
   const selectedTypes = typesParam ? typesParam.split(",").filter((t) => t.trim().length > 0) : [];
+  const updatedParam = params.get("updated");
+  const lastUpdatedFilter: LastUpdatedFilter =
+    updatedParam === "4h" ||
+    updatedParam === "12h" ||
+    updatedParam === "24h" ||
+    updatedParam === "7d"
+      ? updatedParam
+      : "all";
   return {
     showOpenOnly: params.get("open") === "true",
     showMultipleRinks: params.get("multiple") === "true",
     selectedTypes,
     searchTerm: params.get("search") || "",
+    lastUpdatedFilter,
   };
 }
+
+type LastUpdatedFilter = "all" | "4h" | "12h" | "24h" | "7d";
 
 interface FilterState {
   readonly showOpenOnly: boolean;
   readonly showMultipleRinks: boolean;
   readonly selectedTypes: readonly string[];
   readonly searchTerm: string;
+  readonly lastUpdatedFilter: LastUpdatedFilter;
 }
 
 interface FilteredRink {
@@ -612,6 +631,32 @@ interface FilteredRink {
   readonly index: number;
   readonly searchScore: number;
   readonly searchResult?: FuseResult<Rink>;
+}
+
+/**
+ * Checks if a rink's lastUpdated date is within the specified time window.
+ */
+function isWithinTimeWindow(lastUpdatedIso: string, filter: LastUpdatedFilter): boolean {
+  if (filter === "all") {
+    return true;
+  }
+
+  const rinkDate = new Date(lastUpdatedIso);
+  const now = new Date();
+  const diffMs = now.getTime() - rinkDate.getTime();
+
+  switch (filter) {
+    case "4h":
+      return diffMs <= 4 * 60 * 60 * 1000;
+    case "12h":
+      return diffMs <= 12 * 60 * 60 * 1000;
+    case "24h":
+      return diffMs <= 24 * 60 * 60 * 1000;
+    case "7d":
+      return diffMs <= 7 * 24 * 60 * 60 * 1000;
+    default:
+      return true;
+  }
 }
 
 /**
@@ -623,7 +668,7 @@ function filterRinks(
   filterState: FilterState,
   fuseInstance: Fuse<Rink> | null
 ): readonly FilteredRink[] {
-  const { showOpenOnly, selectedTypes, searchTerm } = filterState;
+  const { showOpenOnly, selectedTypes, searchTerm, lastUpdatedFilter } = filterState;
 
   // Step 1: Apply search filter
   let matchedRinks: Set<number> = new Set();
@@ -666,6 +711,11 @@ function filterRinks(
       return;
     }
 
+    // Check last updated filter
+    if (!isWithinTimeWindow(rink.lastUpdated, lastUpdatedFilter)) {
+      return;
+    }
+
     // Rink passes all filters
     const searchResult = searchTerm ? searchResults.find((r) => r.item === rink) : undefined;
     filtered.push({
@@ -705,21 +755,26 @@ function getFilterState(): FilterState | null {
   const checkbox = document.getElementById("show-open-only") as HTMLInputElement;
   const multipleRinksCheckbox = document.getElementById("show-multiple-rinks") as HTMLInputElement;
   const searchInput = document.getElementById("search-input") as HTMLInputElement;
-  const typeSelect = document.getElementById("type-filter") as HTMLSelectElement;
+  const typeCheckboxesContainer = document.getElementById("type-filter");
+  const lastUpdatedSelect = document.getElementById("last-updated-filter") as HTMLSelectElement;
 
-  if (!checkbox || !multipleRinksCheckbox || !typeSelect || rinks.length === 0) {
+  if (!checkbox || !multipleRinksCheckbox || !typeCheckboxesContainer || rinks.length === 0) {
     return null;
   }
 
-  const selectedTypes = Array.from(typeSelect.selectedOptions)
-    .map((option: HTMLOptionElement) => option.value)
-    .filter((value) => value !== ""); // Filter out empty "All types" option
+  // Get selected types from checkboxes
+  const selectedTypes = Array.from(
+    typeCheckboxesContainer.querySelectorAll<HTMLInputElement>('input[type="checkbox"]:checked')
+  ).map((cb) => cb.value);
+
+  const lastUpdatedFilter = (lastUpdatedSelect?.value || "all") as LastUpdatedFilter;
 
   return {
     showOpenOnly: checkbox.checked,
     showMultipleRinks: multipleRinksCheckbox.checked,
     selectedTypes,
     searchTerm: searchInput?.value.trim() || "",
+    lastUpdatedFilter,
   };
 }
 
@@ -737,7 +792,8 @@ function render(): void {
     filterState.showOpenOnly,
     filterState.showMultipleRinks,
     filterState.selectedTypes,
-    filterState.searchTerm
+    filterState.searchTerm,
+    filterState.lastUpdatedFilter
   );
 
   // Step 1: Filter rinks (pure function)
@@ -886,15 +942,21 @@ function syncFiltersToModal(): void {
   const desktopMultipleCheckbox = document.getElementById(
     "show-multiple-rinks"
   ) as HTMLInputElement;
-  const desktopTypeSelect = document.getElementById("type-filter") as HTMLSelectElement;
+  const desktopTypeCheckboxes = document.getElementById("type-filter");
   const desktopSearchInput = document.getElementById("search-input") as HTMLInputElement;
+  const desktopLastUpdatedSelect = document.getElementById(
+    "last-updated-filter"
+  ) as HTMLSelectElement;
 
   const modalCheckbox = document.getElementById("modal-show-open-only") as HTMLInputElement;
   const modalMultipleCheckbox = document.getElementById(
     "modal-show-multiple-rinks"
   ) as HTMLInputElement;
-  const modalTypeSelect = document.getElementById("modal-type-filter") as HTMLSelectElement;
+  const modalTypeCheckboxes = document.getElementById("modal-type-filter");
   const modalSearchInput = document.getElementById("modal-search-input") as HTMLInputElement;
+  const modalLastUpdatedSelect = document.getElementById(
+    "modal-last-updated-filter"
+  ) as HTMLSelectElement;
 
   if (desktopCheckbox && modalCheckbox) {
     modalCheckbox.checked = desktopCheckbox.checked;
@@ -902,16 +964,27 @@ function syncFiltersToModal(): void {
   if (desktopMultipleCheckbox && modalMultipleCheckbox) {
     modalMultipleCheckbox.checked = desktopMultipleCheckbox.checked;
   }
-  if (desktopTypeSelect && modalTypeSelect) {
-    // Sync type selections
-    Array.from(desktopTypeSelect.options).forEach((option, index) => {
-      if (modalTypeSelect.options[index]) {
-        modalTypeSelect.options[index].selected = option.selected;
+  if (desktopTypeCheckboxes && modalTypeCheckboxes) {
+    // Sync type checkboxes by value
+    const desktopCheckboxes = Array.from(
+      desktopTypeCheckboxes.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')
+    );
+    const modalCheckboxes = Array.from(
+      modalTypeCheckboxes.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')
+    );
+
+    desktopCheckboxes.forEach((desktopCb) => {
+      const modalCb = modalCheckboxes.find((cb) => cb.value === desktopCb.value);
+      if (modalCb) {
+        modalCb.checked = desktopCb.checked;
       }
     });
   }
   if (desktopSearchInput && modalSearchInput) {
     modalSearchInput.value = desktopSearchInput.value;
+  }
+  if (desktopLastUpdatedSelect && modalLastUpdatedSelect) {
+    modalLastUpdatedSelect.value = desktopLastUpdatedSelect.value;
   }
 
   // Apply filter to update both desktop and modal lists
@@ -926,15 +999,21 @@ function syncFiltersFromModal(): void {
   const desktopMultipleCheckbox = document.getElementById(
     "show-multiple-rinks"
   ) as HTMLInputElement;
-  const desktopTypeSelect = document.getElementById("type-filter") as HTMLSelectElement;
+  const desktopTypeCheckboxes = document.getElementById("type-filter");
   const desktopSearchInput = document.getElementById("search-input") as HTMLInputElement;
+  const desktopLastUpdatedSelect = document.getElementById(
+    "last-updated-filter"
+  ) as HTMLSelectElement;
 
   const modalCheckbox = document.getElementById("modal-show-open-only") as HTMLInputElement;
   const modalMultipleCheckbox = document.getElementById(
     "modal-show-multiple-rinks"
   ) as HTMLInputElement;
-  const modalTypeSelect = document.getElementById("modal-type-filter") as HTMLSelectElement;
+  const modalTypeCheckboxes = document.getElementById("modal-type-filter");
   const modalSearchInput = document.getElementById("modal-search-input") as HTMLInputElement;
+  const modalLastUpdatedSelect = document.getElementById(
+    "modal-last-updated-filter"
+  ) as HTMLSelectElement;
 
   if (modalCheckbox && desktopCheckbox) {
     desktopCheckbox.checked = modalCheckbox.checked;
@@ -942,16 +1021,27 @@ function syncFiltersFromModal(): void {
   if (modalMultipleCheckbox && desktopMultipleCheckbox) {
     desktopMultipleCheckbox.checked = modalMultipleCheckbox.checked;
   }
-  if (modalTypeSelect && desktopTypeSelect) {
-    // Sync type selections
-    Array.from(modalTypeSelect.options).forEach((option, index) => {
-      if (desktopTypeSelect.options[index]) {
-        desktopTypeSelect.options[index].selected = option.selected;
+  if (modalTypeCheckboxes && desktopTypeCheckboxes) {
+    // Sync type checkboxes by value
+    const modalCheckboxes = Array.from(
+      modalTypeCheckboxes.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')
+    );
+    const desktopCheckboxes = Array.from(
+      desktopTypeCheckboxes.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')
+    );
+
+    modalCheckboxes.forEach((modalCb) => {
+      const desktopCb = desktopCheckboxes.find((cb) => cb.value === modalCb.value);
+      if (desktopCb) {
+        desktopCb.checked = modalCb.checked;
       }
     });
   }
   if (modalSearchInput && desktopSearchInput) {
     desktopSearchInput.value = modalSearchInput.value;
+  }
+  if (modalLastUpdatedSelect && desktopLastUpdatedSelect) {
+    desktopLastUpdatedSelect.value = modalLastUpdatedSelect.value;
   }
   applyFilter();
 }
@@ -1004,30 +1094,31 @@ async function init(): Promise<void> {
     // Populate the rinks list immediately (before map is ready)
     applyFilter();
 
-    // Populate type filter dropdown
-    const typeSelect = document.getElementById("type-filter") as HTMLSelectElement;
-    if (typeSelect) {
-      // Clear existing options except the first "All types" option
-      while (typeSelect.options.length > 1) {
-        typeSelect.remove(1);
-      }
+    // Populate type filter checkboxes
+    const typeCheckboxesContainer = document.getElementById("type-filter");
+    if (typeCheckboxesContainer) {
+      // Clear existing checkboxes
+      typeCheckboxesContainer.innerHTML = "";
 
-      // Add type options
+      // Add checkbox for each type
       allTypes.forEach((type) => {
-        const option = document.createElement("option");
-        option.value = type;
-        option.textContent = type;
-        typeSelect.appendChild(option);
+        const label = document.createElement("label");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = type;
+        checkbox.id = `type-checkbox-${type.replace(/\s+/g, "-")}`;
+        checkbox.checked = urlParams.selectedTypes.includes(type);
+
+        const span = document.createElement("span");
+        span.textContent = type;
+
+        label.appendChild(checkbox);
+        label.appendChild(span);
+
+        checkbox.addEventListener("change", applyFilter);
+
+        typeCheckboxesContainer.appendChild(label);
       });
-
-      // Set selected types from URL
-      if (urlParams.selectedTypes.length > 0) {
-        Array.from(typeSelect.options).forEach((option) => {
-          option.selected = urlParams.selectedTypes.includes(option.value);
-        });
-      }
-
-      typeSelect.addEventListener("change", applyFilter);
     }
 
     // Set up other filter controls
@@ -1050,6 +1141,13 @@ async function init(): Promise<void> {
     if (searchInput) {
       searchInput.value = urlParams.searchTerm;
       searchInput.addEventListener("input", handleSearch);
+    }
+
+    // Set up last updated filter
+    const lastUpdatedSelect = document.getElementById("last-updated-filter") as HTMLSelectElement;
+    if (lastUpdatedSelect) {
+      lastUpdatedSelect.value = urlParams.lastUpdatedFilter;
+      lastUpdatedSelect.addEventListener("change", applyFilter);
     }
 
     // Set up clear button
@@ -1085,7 +1183,6 @@ async function init(): Promise<void> {
     const modalMultipleCheckbox = document.getElementById(
       "modal-show-multiple-rinks"
     ) as HTMLInputElement;
-    const modalTypeSelect = document.getElementById("modal-type-filter") as HTMLSelectElement;
     const modalSearchInput = document.getElementById("modal-search-input") as HTMLInputElement;
     const modalSearchClear = document.getElementById("modal-search-clear");
 
@@ -1101,17 +1198,32 @@ async function init(): Promise<void> {
       });
     }
 
-    if (modalTypeSelect) {
-      // Populate modal type select
-      allTypes.forEach((type) => {
-        const option = document.createElement("option");
-        option.value = type;
-        option.textContent = type;
-        modalTypeSelect.appendChild(option);
-      });
+    // Populate modal type filter checkboxes
+    const modalTypeCheckboxesContainer = document.getElementById("modal-type-filter");
+    if (modalTypeCheckboxesContainer) {
+      // Clear existing checkboxes
+      modalTypeCheckboxesContainer.innerHTML = "";
 
-      modalTypeSelect.addEventListener("change", () => {
-        syncFiltersFromModal();
+      // Add checkbox for each type
+      allTypes.forEach((type) => {
+        const label = document.createElement("label");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = type;
+        checkbox.id = `modal-type-checkbox-${type.replace(/\s+/g, "-")}`;
+        checkbox.checked = urlParams.selectedTypes.includes(type);
+
+        const span = document.createElement("span");
+        span.textContent = type;
+
+        label.appendChild(checkbox);
+        label.appendChild(span);
+
+        checkbox.addEventListener("change", () => {
+          syncFiltersFromModal();
+        });
+
+        modalTypeCheckboxesContainer.appendChild(label);
       });
     }
 
@@ -1119,6 +1231,16 @@ async function init(): Promise<void> {
       modalSearchInput.addEventListener("input", () => {
         syncFiltersFromModal();
         handleSearch();
+      });
+    }
+
+    const modalLastUpdatedSelect = document.getElementById(
+      "modal-last-updated-filter"
+    ) as HTMLSelectElement;
+    if (modalLastUpdatedSelect) {
+      modalLastUpdatedSelect.value = urlParams.lastUpdatedFilter;
+      modalLastUpdatedSelect.addEventListener("change", () => {
+        syncFiltersFromModal();
       });
     }
 
@@ -1135,9 +1257,24 @@ async function init(): Promise<void> {
       if (multipleRinksCheckbox) {
         multipleRinksCheckbox.checked = urlParams.showMultipleRinks;
       }
-      if (typeSelect) {
-        Array.from(typeSelect.options).forEach((option) => {
-          option.selected = urlParams.selectedTypes.includes(option.value);
+      // Update type checkboxes
+      const typeCheckboxesContainer = document.getElementById("type-filter");
+      if (typeCheckboxesContainer) {
+        const checkboxes = Array.from(
+          typeCheckboxesContainer.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')
+        );
+        checkboxes.forEach((cb) => {
+          cb.checked = urlParams.selectedTypes.includes(cb.value);
+        });
+      }
+      // Update modal type checkboxes
+      const modalTypeCheckboxesContainer = document.getElementById("modal-type-filter");
+      if (modalTypeCheckboxesContainer) {
+        const checkboxes = Array.from(
+          modalTypeCheckboxesContainer.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')
+        );
+        checkboxes.forEach((cb) => {
+          cb.checked = urlParams.selectedTypes.includes(cb.value);
         });
       }
       if (searchInput) {
@@ -1165,7 +1302,9 @@ async function init(): Promise<void> {
 
 // Start initialization when DOM is ready
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
+  document.addEventListener("DOMContentLoaded", () => {
+    void init();
+  });
 } else {
   void init();
 }
