@@ -4,6 +4,15 @@ import type { Rink } from "../types/rink.js";
 const MONTREAL_RINKS_URL =
   "https://montreal.ca/en/outdoor-skating-rinks-conditions?shownResults=1000";
 
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+
+interface CacheEntry {
+  readonly rinks: readonly Rink[];
+  readonly timestamp: number;
+}
+
+let cache: CacheEntry | null = null;
+
 /**
  * Parses the last updated timestamp string.
  * Handles formats like "January 4 - 11:14 am" or "December 16 - 11:38 am"
@@ -24,9 +33,17 @@ function determineIsOpen(statusText: string): boolean {
 
 /**
  * Fetches and parses the Montreal skating rinks page.
+ * Uses an in-memory cache to avoid scraping more than once every 5 minutes.
  * @returns An array of parsed rink data
  */
 export async function parseMontrealRinks(): Promise<readonly Rink[]> {
+  // Check cache
+  const now = Date.now();
+  if (cache && now - cache.timestamp < CACHE_DURATION_MS) {
+    return cache.rinks;
+  }
+
+  // Cache expired or doesn't exist, fetch fresh data
   const response = await fetch(MONTREAL_RINKS_URL);
 
   if (!response.ok) {
@@ -104,6 +121,12 @@ export async function parseMontrealRinks(): Promise<readonly Rink[]> {
       });
     }
   });
+
+  // Update cache with fresh data
+  cache = {
+    rinks,
+    timestamp: Date.now(),
+  };
 
   return rinks;
 }

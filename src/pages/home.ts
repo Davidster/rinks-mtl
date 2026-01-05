@@ -1,38 +1,42 @@
-import { getGeocodedRinks } from "../services/rinkGeocoding.js";
 import { env } from "../env.js";
-import type { Rink } from "../types/rink.js";
 
-function formatRink(rink: Rink, index: number): string {
-  const statusClass = rink.isOpen ? "open" : "closed";
+/**
+ * Generates the filter HTML (search, checkboxes, type filter).
+ * @param prefix - Prefix for element IDs (empty for desktop, "modal-" for mobile)
+ */
+function generateFiltersHtml(prefix: string): string {
+  const idPrefix = prefix ? `${prefix}-` : "";
+  const searchInputId = `${idPrefix}search-input`;
+  const clearButtonId = `${idPrefix}search-clear`;
+  const openCheckboxId = `${idPrefix}show-open-only`;
+  const multipleCheckboxId = `${idPrefix}show-multiple-rinks`;
+  const typeSelectId = `${idPrefix}type-filter`;
+
   return `
-    <div class="rink ${statusClass}" data-rink-index="${index}" data-is-open="${rink.isOpen}">
-      <h3><a href="${rink.hyperlink}" target="_blank">${rink.name}</a></h3>
-      <p><strong>Type:</strong> ${rink.type}</p>
-      <p><strong>Status:</strong> ${rink.iceStatus}</p>
-      <p><strong>Last Updated:</strong> ${rink.lastUpdatedRaw}</p>
-      <p><strong>Address:</strong> ${rink.address}</p>
-    </div>
+        <div class="search-box">
+          <input type="text" id="${searchInputId}" placeholder="Search rinks..." />
+          <button type="button" class="search-box-clear hidden" id="${clearButtonId}" aria-label="Clear search">×</button>
+        </div>
+        <div class="filter-controls">
+          <label>
+            <input type="checkbox" id="${openCheckboxId}" />
+            <span>Show only open rinks</span>
+          </label>
+          <label>
+            <input type="checkbox" id="${multipleCheckboxId}" />
+            <span>Show only locations with multiple rinks</span>
+          </label>
+        </div>
+        <div class="type-filter">
+          <label for="${typeSelectId}">Filter by type (hold Ctrl/Cmd to select multiple):</label>
+          <select id="${typeSelectId}" multiple size="4">
+          </select>
+        </div>
   `;
 }
 
-export async function homePage(): Promise<string> {
-  let rinks: readonly Rink[] = [];
-  let error: string | null = null;
-
-  try {
-    rinks = await getGeocodedRinks();
-  } catch (err) {
-    error = err instanceof Error ? err.message : "Failed to fetch rinks data";
-    console.error("Error parsing rinks:", err);
-  }
-
-  const errorHtml = error ? `<div class="error">Error: ${error}</div>` : "";
-
-  // Generate rinks HTML for the sidebar
-  const rinksHtml =
-    rinks.length > 0
-      ? rinks.map((rink, index) => formatRink(rink, index)).join("")
-      : "<p>No rinks found.</p>";
+export function homePage(): string {
+  const errorHtml = "";
 
   return `
 <!DOCTYPE html>
@@ -125,6 +129,7 @@ export async function homePage(): Promise<string> {
       font-size: 1.2em;
     }
     .filter-controls {
+      margin-top: 15px;
       margin-bottom: 0;
       padding-bottom: 0;
     }
@@ -271,7 +276,6 @@ export async function homePage(): Promise<string> {
       cursor: pointer;
       z-index: 1000;
       font-size: 24px;
-      display: flex;
       align-items: center;
       justify-content: center;
       transition: background-color 0.2s, transform 0.2s;
@@ -319,10 +323,9 @@ export async function homePage(): Promise<string> {
       transform: translateY(0);
     }
     .modal-header {
-      padding: 20px;
-      border-bottom: 1px solid #eee;
+      padding: 12px 20px 0px 20px;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
       flex-shrink: 0;
     }
@@ -351,8 +354,24 @@ export async function homePage(): Promise<string> {
     }
     .modal-body {
       flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 0;
+    }
+    .modal-filters {
+      flex-shrink: 0;
+      padding: 0px 20px 20px 20px;
+      background: white;
+      border-bottom: 1px solid #eee;
+      overflow-y: auto;
+      max-height: 40vh;
+    }
+    .modal-body .rinks-list-container {
+      flex: 1;
       overflow-y: auto;
       padding: 20px;
+      min-height: 0;
     }
     /* Mobile responsive styles */
     @media (max-width: 768px) {
@@ -394,31 +413,11 @@ export async function homePage(): Promise<string> {
     </div>
     <div class="sidebar">
       <div class="sidebar-header">
-        <h2>Rinks</h2>
-        <div class="filter-controls">
-          <label>
-            <input type="checkbox" id="show-open-only" />
-            <span>Show only open rinks</span>
-          </label>
-          <label>
-            <input type="checkbox" id="show-multiple-rinks" />
-            <span>Show only locations with multiple rinks</span>
-          </label>
-        </div>
-        <div class="type-filter">
-          <label for="type-filter">Filter by type:</label>
-          <select id="type-filter" multiple size="4">
-            <option value="">All types</option>
-          </select>
-        </div>
-        <div class="search-box">
-          <input type="text" id="search-input" placeholder="Search rinks..." />
-          <button type="button" class="search-box-clear hidden" id="search-clear" aria-label="Clear search">×</button>
-        </div>
+        ${generateFiltersHtml("")}
       </div>
       <div class="rinks-list-container">
         <div class="rinks-list" id="rinks-list">
-          ${rinksHtml}
+          <!-- Rinks list will be populated by JavaScript -->
         </div>
       </div>
     </div>
@@ -431,33 +430,15 @@ export async function homePage(): Promise<string> {
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Filters & Results</h2>
         <button class="modal-close" id="modal-close" aria-label="Close modal">×</button>
       </div>
       <div class="modal-body">
-        <div class="filter-controls">
-          <label>
-            <input type="checkbox" id="modal-show-open-only" />
-            <span>Show only open rinks</span>
-          </label>
-          <label>
-            <input type="checkbox" id="modal-show-multiple-rinks" />
-            <span>Show only locations with multiple rinks</span>
-          </label>
-        </div>
-        <div class="type-filter">
-          <label for="modal-type-filter">Filter by type:</label>
-          <select id="modal-type-filter" multiple size="4">
-            <option value="">All types</option>
-          </select>
-        </div>
-        <div class="search-box">
-          <input type="text" id="modal-search-input" placeholder="Search rinks..." />
-          <button type="button" class="search-box-clear hidden" id="modal-search-clear" aria-label="Clear search">×</button>
+        <div class="modal-filters">
+          ${generateFiltersHtml("modal")}
         </div>
         <div class="rinks-list-container">
           <div class="rinks-list" id="modal-rinks-list">
-            ${rinksHtml}
+            <!-- Rinks list will be populated by JavaScript -->
           </div>
         </div>
       </div>

@@ -16,8 +16,7 @@ interface Rink {
 }
 
 interface RinksResponse {
-  readonly allRinks: readonly Rink[];
-  readonly geocodedRinks: readonly Rink[];
+  readonly rinks: readonly Rink[];
 }
 
 interface MarkerWithData extends google.maps.Marker {
@@ -32,8 +31,7 @@ let map: google.maps.Map | null = null;
 // MarkerClusterer is imported from CDN, types may not be fully available
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let clusterer: any = null;
-let geocodedRinks: readonly Rink[] = [];
-let allRinks: readonly Rink[] = [];
+let rinks: readonly Rink[] = [];
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 let fuse: Fuse<Rink> | null = null;
 let allTypes: readonly string[] = [];
@@ -50,6 +48,8 @@ function initMap(): void {
     map = new google.maps.Map(document.getElementById("map") as HTMLElement, {
       zoom: 11,
       center: montreal,
+      mapTypeControl: false,
+      streetViewControl: false,
       styles: [
         {
           featureType: "poi",
@@ -71,10 +71,46 @@ function initMap(): void {
     });
   }
 
-  createMarkers();
+  // Render everything (filters rinks and creates markers)
+  render();
+}
 
-  // Apply filters after markers are created
-  applyFilter();
+/**
+ * Formats a single rink for the sidebar list.
+ */
+function formatRink(
+  rink: Rink,
+  index: number,
+  searchTerm: string,
+  searchResult?: FuseResult<Rink>
+): string {
+  const statusClass = rink.isOpen ? "open" : "closed";
+
+  // Get highlighted name and address if there's a search term
+  let nameHtml = rink.name;
+  let addressHtml = rink.address;
+
+  if (searchTerm && searchResult) {
+    const nameMatch = searchResult.matches?.find((m: FuseResultMatch) => m.key === "name");
+    const addressMatch = searchResult.matches?.find((m: FuseResultMatch) => m.key === "address");
+
+    if (nameMatch) {
+      nameHtml = highlightText(rink.name, nameMatch);
+    }
+    if (addressMatch) {
+      addressHtml = highlightText(rink.address, addressMatch);
+    }
+  }
+
+  return `
+    <div class="rink ${statusClass}" data-rink-index="${index}" data-is-open="${rink.isOpen}">
+      <h3><a href="${rink.hyperlink}" target="_blank">${nameHtml}</a></h3>
+      <p><strong>Type:</strong> ${rink.type}</p>
+      <p><strong>Status:</strong> ${rink.iceStatus}</p>
+      <p><strong>Last Updated:</strong> ${rink.lastUpdatedRaw}</p>
+      <p><strong>Address:</strong> ${addressHtml}</p>
+    </div>
+  `;
 }
 
 /**
@@ -271,10 +307,10 @@ function createHockeyPuckIcon(
 }
 
 /**
- * Creates markers for all geocoded rinks, grouping by location.
+ * Renders markers from filtered rinks, grouping by location.
  */
-function createMarkers(): void {
-  if (!map || geocodedRinks.length === 0) {
+function renderMarkers(filteredRinks: readonly FilteredRink[]): void {
+  if (!map) {
     return;
   }
 
@@ -287,9 +323,18 @@ function createMarkers(): void {
   markers = [];
   infoWindows = [];
 
-  // Group rinks by location (lat, lng)
+  // Filter out rinks without coordinates
+  const geocodedFilteredRinks = filteredRinks.filter(
+    ({ rink }) => rink.lat !== undefined && rink.lng !== undefined
+  );
+
+  if (geocodedFilteredRinks.length === 0) {
+    return;
+  }
+
+  // Group filtered rinks by location (lat, lng)
   const locationGroups = new Map<string, Rink[]>();
-  for (const rink of geocodedRinks) {
+  for (const { rink } of geocodedFilteredRinks) {
     if (rink.lat !== undefined && rink.lng !== undefined) {
       const locationKey = `${rink.lat.toFixed(6)},${rink.lng.toFixed(6)}`;
       const existing = locationGroups.get(locationKey);
@@ -302,30 +347,30 @@ function createMarkers(): void {
   }
 
   // Create one marker per location
-  for (const [locationKey, rinks] of locationGroups) {
-    const firstRink = rinks[0];
+  for (const [locationKey, rinksAtLocation] of locationGroups) {
+    const firstRink = rinksAtLocation[0];
     if (!firstRink || firstRink.lat === undefined || firstRink.lng === undefined) {
       continue;
     }
 
     // Determine marker color based on rinks (green if any open, red if all closed)
-    const hasOpenRink = rinks.some((r) => r.isOpen);
+    const hasOpenRink = rinksAtLocation.some((r) => r.isOpen);
     const markerColor = hasOpenRink ? "#27ae60" : "#a93226"; // Darker red for closed
 
     // Create title with all rink names
     const title =
-      rinks.length > 1
-        ? `${rinks.length} rinks: ${rinks.map((r) => r.name).join(", ")}`
+      rinksAtLocation.length > 1
+        ? `${rinksAtLocation.length} rinks: ${rinksAtLocation.map((r) => r.name).join(", ")}`
         : firstRink.name;
 
     // Create hockey puck icon
-    const iconSize = rinks.length > 1 ? 40 : 36; // Slightly larger if multiple rinks
+    const iconSize = rinksAtLocation.length > 1 ? 40 : 36; // Slightly larger if multiple rinks
     const puckIcon = createHockeyPuckIcon(markerColor, iconSize);
 
-    // Don't create info window content upfront - create it lazily on click
+    // Create marker
     const marker = new google.maps.Marker({
       position: { lat: firstRink.lat, lng: firstRink.lng },
-      map: null, // Don't add to map yet, we'll filter
+      map,
       title,
       icon: {
         url: puckIcon.url,
@@ -336,8 +381,8 @@ function createMarkers(): void {
     }) as MarkerWithData;
 
     // Store all rinks at this location
-    marker.rinkData = rinks;
-    marker.filteredRinkData = rinks; // Initially all rinks pass filter
+    marker.rinkData = rinksAtLocation;
+    marker.filteredRinkData = rinksAtLocation; // All rinks in marker are already filtered
     marker.locationKey = locationKey;
 
     // Create info window lazily on click
@@ -346,7 +391,7 @@ function createMarkers(): void {
       infoWindows.forEach((iw) => iw.close());
 
       // Create info window content only when needed
-      const content = createInfoWindowContent(rinks);
+      const content = createInfoWindowContent(rinksAtLocation);
       const infoWindow = new google.maps.InfoWindow({ content });
       infoWindow.open(map, marker);
 
@@ -442,9 +487,6 @@ function createMarkers(): void {
       },
     });
   }
-
-  // Apply initial filter
-  applyFilter();
 }
 
 /**
@@ -558,65 +600,38 @@ function readUrlParams(): {
   };
 }
 
+interface FilterState {
+  readonly showOpenOnly: boolean;
+  readonly showMultipleRinks: boolean;
+  readonly selectedTypes: readonly string[];
+  readonly searchTerm: string;
+}
+
+interface FilteredRink {
+  readonly rink: Rink;
+  readonly index: number;
+  readonly searchScore: number;
+  readonly searchResult?: FuseResult<Rink>;
+}
+
 /**
- * Applies the filter to both sidebar list and map markers.
+ * Pure function: Filters rinks based on filter state.
+ * Returns filtered rinks with search scores and results.
  */
-function applyFilter(): void {
-  const checkbox = document.getElementById("show-open-only") as HTMLInputElement;
-  const multipleRinksCheckbox = document.getElementById("show-multiple-rinks") as HTMLInputElement;
-  const searchInput = document.getElementById("search-input") as HTMLInputElement;
+function filterRinks(
+  allRinks: readonly Rink[],
+  filterState: FilterState,
+  fuseInstance: Fuse<Rink> | null
+): readonly FilteredRink[] {
+  const { showOpenOnly, selectedTypes, searchTerm } = filterState;
 
-  const typeSelect = document.getElementById("type-filter") as HTMLSelectElement;
-  if (!checkbox || !multipleRinksCheckbox || !typeSelect || allRinks.length === 0) {
-    // If no rinks data yet, show all markers (no filtering)
-    if (clusterer && map && markers.length > 0) {
-      clusterer.clearMarkers();
-      clusterer.addMarkers(markers);
-    }
-    return;
-  }
-
-  const showOpenOnly = checkbox.checked;
-  const showMultipleRinks = multipleRinksCheckbox.checked;
-  const selectedTypes = Array.from(typeSelect.selectedOptions)
-    .map((option: HTMLOptionElement) => option.value)
-    .filter((value) => value !== ""); // Filter out empty "All types" option
-  const searchTerm = searchInput?.value.trim() || "";
-
-  // Update URL with current filter state
-  updateUrlParams(showOpenOnly, showMultipleRinks, selectedTypes, searchTerm);
-
-  // Perform fuzzy search if there's a search term
-  let searchResults: Array<FuseResult<Rink>> = [];
+  // Step 1: Apply search filter
   let matchedRinks: Set<number> = new Set();
   let rinkScores: Map<number, number> = new Map();
+  let searchResults: Array<FuseResult<Rink>> = [];
 
-  if (searchTerm) {
-    if (!fuse) {
-      // If fuse not ready, show all markers
-      markers.forEach((marker) => {
-        if (showMultipleRinks && marker.rinkData.length <= 1) {
-          marker.setMap(null);
-          return;
-        }
-        if (selectedTypes.length > 0) {
-          const hasMatchingType = marker.rinkData.some((r) => selectedTypes.includes(r.type));
-          if (!hasMatchingType) {
-            marker.setMap(null);
-            return;
-          }
-        }
-        const hasOpenRink = marker.rinkData.some((r) => r.isOpen);
-        const shouldShow = !showOpenOnly || hasOpenRink;
-        if (shouldShow) {
-          marker.setMap(map);
-        } else {
-          marker.setMap(null);
-        }
-      });
-      return;
-    }
-    searchResults = fuse.search(searchTerm);
+  if (searchTerm && fuseInstance) {
+    searchResults = fuseInstance.search(searchTerm);
     for (const result of searchResults) {
       const index = allRinks.indexOf(result.item);
       if (index !== -1) {
@@ -632,143 +647,156 @@ function applyFilter(): void {
     });
   }
 
-  // Get rinks list container for sorting
-  const rinksListContainer = document.querySelector(".rinks-list");
-  if (!rinksListContainer) {
-    return;
-  }
+  // Step 2: Apply all filters
+  const filtered: FilteredRink[] = [];
 
-  // Filter and sort sidebar list
-  const rinkElements = Array.from(document.querySelectorAll(".rink"));
-  const visibleElements: Array<{ element: Element; index: number; score: number }> = [];
-
-  rinkElements.forEach((element) => {
-    const rinkIndex = Number.parseInt(element.getAttribute("data-rink-index") || "0", 10);
-    const rink = allRinks[rinkIndex];
-
-    if (!rink) {
+  allRinks.forEach((rink, index) => {
+    // Check if rink matches search
+    if (!matchedRinks.has(index)) {
       return;
     }
 
-    const isOpen = element.getAttribute("data-is-open") === "true";
-    const matches = matchedRinks.has(rinkIndex);
-    const matchesType = selectedTypes.length === 0 || selectedTypes.includes(rink.type);
-    const shouldShow = (!showOpenOnly || isOpen) && matches && matchesType;
-
-    if (shouldShow) {
-      const score = rinkScores.get(rinkIndex) ?? 1;
-      visibleElements.push({ element, index: rinkIndex, score });
-    } else {
-      element.classList.add("hidden");
+    // Check type filter
+    if (selectedTypes.length > 0 && !selectedTypes.includes(rink.type)) {
+      return;
     }
+
+    // Check open filter
+    if (showOpenOnly && !rink.isOpen) {
+      return;
+    }
+
+    // Rink passes all filters
+    const searchResult = searchTerm ? searchResults.find((r) => r.item === rink) : undefined;
+    filtered.push({
+      rink,
+      index,
+      searchScore: rinkScores.get(index) ?? 1,
+      searchResult,
+    });
   });
 
-  // Update modal list after filtering
-  updateModalRinksList();
-
-  // Sort by relevance score (lower is better) and then by index for stable sorting
-  visibleElements.sort((a, b) => {
-    if (a.score !== b.score) {
-      return a.score - b.score;
+  // Step 3: Sort by relevance score (lower is better) and then by index for stable sorting
+  filtered.sort((a, b) => {
+    if (a.searchScore !== b.searchScore) {
+      return a.searchScore - b.searchScore;
     }
     return a.index - b.index;
   });
 
-  // Reorder DOM elements and update highlights
-  for (const { element, index } of visibleElements) {
-    element.classList.remove("hidden");
-    rinksListContainer.appendChild(element);
+  return filtered;
+}
 
-    const rink = allRinks[index];
-    if (!rink) {
-      continue;
-    }
-
-    // Update highlights based on search results
-    if (searchTerm) {
-      const result = searchResults.find((r) => r.item === rink);
-      if (result) {
-        // Find name matches
-        const nameMatch = result.matches?.find((m: FuseResultMatch) => m.key === "name");
-        const nameLink = element.querySelector("h3 a");
-        if (nameLink) {
-          nameLink.innerHTML = highlightText(rink.name, nameMatch);
-        }
-
-        // Find address matches
-        const addressMatch = result.matches?.find((m: FuseResultMatch) => m.key === "address");
-        const paragraphs = Array.from(element.querySelectorAll("p"));
-        const addressP = paragraphs.find((p) => (p.textContent || "").includes("Address:"));
-        if (addressP) {
-          const strong = addressP.querySelector("strong");
-          if (strong) {
-            addressP.innerHTML = `${strong.outerHTML} ${highlightText(rink.address, addressMatch)}`;
-          }
-        }
-      }
-    } else {
-      // Remove highlights when search is cleared
-      const nameLink = element.querySelector("h3 a");
-      if (nameLink) {
-        nameLink.innerHTML = rink.name;
-      }
-
-      const paragraphs = Array.from(element.querySelectorAll("p"));
-      const addressP = paragraphs.find((p) => p.textContent?.includes("Address:") ?? false);
-      if (addressP) {
-        const strong = addressP.querySelector("strong");
-        if (strong) {
-          addressP.innerHTML = `${strong.outerHTML} ${rink.address}`;
-        }
-      }
-    }
-  }
-
-  // Filter map markers and update clusterer
-  const visibleMarkers: MarkerWithData[] = [];
-
-  markers.forEach((marker) => {
-    // Compute filtered rinks for this marker
-    const filteredRinks = marker.rinkData.filter((rink) => {
-      // Check type filter
-      if (selectedTypes.length > 0 && !selectedTypes.includes(rink.type)) {
-        return false;
-      }
-
-      // Check search filter
-      const rinkKey = `${rink.name}|${rink.address}|${rink.type}`;
-      const rinkIndex = rinkIndexMap.get(rinkKey);
-      if (rinkIndex === undefined || !matchedRinks.has(rinkIndex)) {
-        return false;
-      }
-
-      // Check open filter
-      if (showOpenOnly && !rink.isOpen) {
-        return false;
-      }
-
-      return true;
-    });
-
-    // Update marker's filtered rink data
-    marker.filteredRinkData = filteredRinks;
-
-    // Check multiple rinks filter (based on filtered count)
-    if (showMultipleRinks && filteredRinks.length <= 1) {
-      return;
-    }
-
-    // Show marker if it has any filtered rinks
-    if (filteredRinks.length > 0) {
-      visibleMarkers.push(marker);
-    }
+/**
+ * Generates HTML for the rinks list based on filtered rinks.
+ */
+function generateRinksListHtml(filteredRinks: readonly FilteredRink[], searchTerm: string): string {
+  const rinkHtmls = filteredRinks.map(({ rink, index, searchResult }) => {
+    return formatRink(rink, index, searchTerm, searchResult);
   });
 
-  // Update clusterer with visible markers
-  if (clusterer && map) {
-    clusterer.clearMarkers();
-    clusterer.addMarkers(visibleMarkers);
+  return rinkHtmls.join("");
+}
+
+/**
+ * Gets current filter state from the DOM.
+ */
+function getFilterState(): FilterState | null {
+  const checkbox = document.getElementById("show-open-only") as HTMLInputElement;
+  const multipleRinksCheckbox = document.getElementById("show-multiple-rinks") as HTMLInputElement;
+  const searchInput = document.getElementById("search-input") as HTMLInputElement;
+  const typeSelect = document.getElementById("type-filter") as HTMLSelectElement;
+
+  if (!checkbox || !multipleRinksCheckbox || !typeSelect || rinks.length === 0) {
+    return null;
   }
+
+  const selectedTypes = Array.from(typeSelect.selectedOptions)
+    .map((option: HTMLOptionElement) => option.value)
+    .filter((value) => value !== ""); // Filter out empty "All types" option
+
+  return {
+    showOpenOnly: checkbox.checked,
+    showMultipleRinks: multipleRinksCheckbox.checked,
+    selectedTypes,
+    searchTerm: searchInput?.value.trim() || "",
+  };
+}
+
+/**
+ * Renders the entire page: filters rinks and updates both list and markers.
+ */
+function render(): void {
+  const filterState = getFilterState();
+  if (!filterState) {
+    return;
+  }
+
+  // Update URL with current filter state
+  updateUrlParams(
+    filterState.showOpenOnly,
+    filterState.showMultipleRinks,
+    filterState.selectedTypes,
+    filterState.searchTerm
+  );
+
+  // Step 1: Filter rinks (pure function)
+  let filteredRinks = filterRinks(rinks, filterState, fuse);
+
+  // Step 2: Apply "show multiple rinks" filter
+  if (filterState.showMultipleRinks) {
+    // Group filtered rinks by location to count how many are at each location
+    const locationGroups = new Map<string, FilteredRink[]>();
+    for (const filteredRink of filteredRinks) {
+      const { rink } = filteredRink;
+      if (rink.lat !== undefined && rink.lng !== undefined) {
+        const locationKey = `${rink.lat.toFixed(6)},${rink.lng.toFixed(6)}`;
+        const existing = locationGroups.get(locationKey);
+        if (existing) {
+          existing.push(filteredRink);
+        } else {
+          locationGroups.set(locationKey, [filteredRink]);
+        }
+      }
+    }
+
+    // Only keep rinks at locations with multiple rinks
+    filteredRinks = filteredRinks.filter(({ rink }) => {
+      if (rink.lat === undefined || rink.lng === undefined) {
+        return false;
+      }
+      const locationKey = `${rink.lat.toFixed(6)},${rink.lng.toFixed(6)}`;
+      const group = locationGroups.get(locationKey);
+      return group !== undefined && group.length > 1;
+    });
+  }
+
+  // Step 3: Render rinks list
+  const rinksListHtml = generateRinksListHtml(filteredRinks, filterState.searchTerm);
+
+  // Update desktop list
+  const rinksListContainer = document.querySelector(".rinks-list");
+  if (rinksListContainer) {
+    rinksListContainer.innerHTML = rinksListHtml;
+  }
+
+  // Update modal list
+  const modalRinksListContainer = document.getElementById("modal-rinks-list");
+  if (modalRinksListContainer) {
+    modalRinksListContainer.innerHTML = rinksListHtml;
+  }
+
+  // Step 4: Render markers (only if map is ready)
+  if (map) {
+    renderMarkers(filteredRinks);
+  }
+}
+
+/**
+ * Applies the filter - triggers a full re-render.
+ */
+function applyFilter(): void {
+  render();
 }
 
 /**
@@ -886,8 +914,8 @@ function syncFiltersToModal(): void {
     modalSearchInput.value = desktopSearchInput.value;
   }
 
-  // Update modal rinks list
-  updateModalRinksList();
+  // Apply filter to update both desktop and modal lists
+  applyFilter();
 }
 
 /**
@@ -925,21 +953,7 @@ function syncFiltersFromModal(): void {
   if (modalSearchInput && desktopSearchInput) {
     desktopSearchInput.value = modalSearchInput.value;
   }
-
   applyFilter();
-}
-
-/**
- * Updates the rinks list in the modal to match the filtered results.
- */
-function updateModalRinksList(): void {
-  const desktopList = document.getElementById("rinks-list");
-  const modalList = document.getElementById("modal-rinks-list");
-
-  if (desktopList && modalList) {
-    // Clone the filtered rinks from desktop list to modal
-    modalList.innerHTML = desktopList.innerHTML;
-  }
 }
 
 /**
@@ -954,25 +968,24 @@ async function init(): Promise<void> {
     }
 
     const data = (await response.json()) as RinksResponse;
-    allRinks = data.allRinks;
-    geocodedRinks = data.geocodedRinks;
+    rinks = data.rinks;
 
     // Extract unique types and sort them
     const typeSet = new Set<string>();
-    allRinks.forEach((rink) => {
+    rinks.forEach((rink) => {
       typeSet.add(rink.type);
     });
     allTypes = Array.from(typeSet).sort();
 
     // Build index map for fast rink lookups (O(1) instead of O(n))
     rinkIndexMap.clear();
-    allRinks.forEach((rink, index) => {
+    rinks.forEach((rink, index) => {
       const key = `${rink.name}|${rink.address}|${rink.type}`;
       rinkIndexMap.set(key, index);
     });
 
     // Initialize Fuse.js for fuzzy search
-    fuse = new Fuse(Array.from(allRinks), {
+    fuse = new Fuse(Array.from(rinks), {
       keys: ["name", "address", "type", "iceStatus"],
       threshold: 0.4, // 0.0 = perfect match, 1.0 = match anything
       includeMatches: true,
@@ -982,11 +995,14 @@ async function init(): Promise<void> {
     // Update geocoded count in stats
     const geocodedCountElement = document.getElementById("geocoded-count");
     if (geocodedCountElement) {
-      geocodedCountElement.textContent = geocodedRinks.length.toString();
+      geocodedCountElement.textContent = rinks.length.toString();
     }
 
     // Read filter state from URL
     const urlParams = readUrlParams();
+
+    // Populate the rinks list immediately (before map is ready)
+    applyFilter();
 
     // Populate type filter dropdown
     const typeSelect = document.getElementById("type-filter") as HTMLSelectElement;

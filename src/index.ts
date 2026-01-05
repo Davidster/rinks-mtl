@@ -7,8 +7,8 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 // import open from "open"; // Commented out - uncomment if needed for auto-opening browser
 import { homePage } from "./pages/home.js";
-import { handleRinksRequest } from "./api/rinks.js";
 import { env } from "./env.js";
+import { getGeocodedRinks } from "./services/rinkGeocoding.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,8 +21,8 @@ const server = http.createServer((req, res) => {
     // API endpoint for rinks data
     if (pathname === "/api/rinks") {
       try {
-        const data = await handleRinksRequest();
-        res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify(data));
+        const rinks = await getGeocodedRinks();
+        res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify({ rinks }));
         return;
       } catch (error) {
         console.error("Error handling rinks request:", error);
