@@ -1,10 +1,12 @@
 import { env } from "../env.js";
+import { getTranslations, type Language, type Translations } from "./translations.js";
 
 /**
  * Generates the filter HTML (search, checkboxes, type filter).
  * @param prefix - Prefix for element IDs (empty for desktop, "modal-" for mobile)
+ * @param t - Translations object
  */
-function generateFiltersHtml(prefix: string): string {
+function generateFiltersHtml(prefix: string, t: Translations): string {
   const idPrefix = prefix ? `${prefix}-` : "";
   const searchInputId = `${idPrefix}search-input`;
   const clearButtonId = `${idPrefix}search-clear`;
@@ -15,48 +17,119 @@ function generateFiltersHtml(prefix: string): string {
 
   return `
         <div class="search-box">
-          <input type="text" id="${searchInputId}" placeholder="Search rinks..." />
-          <button type="button" class="search-box-clear hidden" id="${clearButtonId}" aria-label="Clear search">×</button>
+          <input type="text" id="${searchInputId}" placeholder="${t.searchPlaceholder}" />
+          <button type="button" class="search-box-clear hidden" id="${clearButtonId}" aria-label="${t.clearSearch}">×</button>
         </div>
         <div class="filter-controls">
           <label>
             <input type="checkbox" id="${openCheckboxId}" />
-            <span>Show only open rinks</span>
+            <span>${t.showOpenOnly}</span>
           </label>
           <label>
             <input type="checkbox" id="${multipleCheckboxId}" />
-            <span>Show only locations with multiple rinks</span>
+            <span>${t.showMultipleRinks}</span>
           </label>
         </div>
         <div class="type-filter">
-          <label>Rink type:</label>
+          <label>${t.rinkType}</label>
           <div id="${typeSelectId}" class="type-checkboxes">
             <!-- Type checkboxes will be populated by JavaScript -->
           </div>
         </div>
         <div class="type-filter">
-          <label for="${lastUpdatedSelectId}">Recent maintenance:</label>
+          <label for="${lastUpdatedSelectId}">${t.recentMaintenance}</label>
           <select id="${lastUpdatedSelectId}">
-            <option value="all">All time</option>
-            <option value="4h">Last 4 hours</option>
-            <option value="12h">Last 12 hours</option>
-            <option value="24h">Last 24 hours</option>
-            <option value="7d">Last 7 days</option>
+            <option value="all">${t.allTime}</option>
+            <option value="4h">${t.last4Hours}</option>
+            <option value="12h">${t.last12Hours}</option>
+            <option value="24h">${t.last24Hours}</option>
+            <option value="7d">${t.last7Days}</option>
           </select>
         </div>
   `;
 }
 
-export function homePage(): string {
+export function homePage(lang: Language = "fr"): string {
   const errorHtml = "";
+  const t = getTranslations(lang);
+  const siteUrl = env.SITE_URL;
+  const currentUrl = `${siteUrl}/${lang}`;
+  const alternateLang: Language = lang === "fr" ? "en" : "fr";
+  const alternateUrl = `${siteUrl}/${alternateLang}`;
+
+  // Generate structured data (JSON-LD)
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name:
+      lang === "fr"
+        ? "Carte des patinoires extérieures de Montréal"
+        : "Montreal Outdoor Hockey Rinks Map",
+    description: t.metaDescription,
+    url: currentUrl,
+    applicationCategory: "MapApplication",
+    operatingSystem: "Web",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "CAD",
+    },
+    provider: {
+      "@type": "Organization",
+      name: lang === "fr" ? "Patinoires Montréal" : "Montreal Outdoor Rinks",
+    },
+    about: {
+      "@type": "SportsActivityLocation",
+      name:
+        lang === "fr" ? "Patinoires extérieures à Montréal" : "Outdoor Hockey Rinks in Montreal",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Montreal",
+        addressRegion: "QC",
+        addressCountry: "CA",
+      },
+    },
+  };
 
   return `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="${t.htmlLang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Montreal Skating Rinks</title>
+  
+  <!-- Primary SEO Meta Tags -->
+  <title>${t.siteTitle}</title>
+  <meta name="title" content="${t.siteTitle}">
+  <meta name="description" content="${t.metaDescription}">
+  <meta name="author" content="${lang === "fr" ? "Patinoires Montréal" : "Montreal Outdoor Rinks"}">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="${currentUrl}">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="${currentUrl}">
+  <meta property="og:title" content="${t.siteTitle}">
+  <meta property="og:description" content="${t.metaDescription}">
+  <meta property="og:locale" content="${lang === "fr" ? "fr_CA" : "en_CA"}">
+  <meta property="og:locale:alternate" content="${lang === "fr" ? "en_CA" : "fr_CA"}">
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="${currentUrl}">
+  <meta property="twitter:title" content="${t.siteTitle}">
+  <meta property="twitter:description" content="${t.metaDescription}">
+  
+  <!-- Bilingual Support -->
+  <link rel="alternate" hreflang="${lang}" href="${currentUrl}">
+  <link rel="alternate" hreflang="${alternateLang}" href="${alternateUrl}">
+  <link rel="alternate" hreflang="x-default" href="${siteUrl}/fr">
+  
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+    ${JSON.stringify(structuredData, null, 2)}
+  </script>
+  
   <script src="https://maps.googleapis.com/maps/api/js?key=${env.GOOGLE_MAPS_FRONTEND_API_KEY}"></script>
   <script type="importmap">
     {
@@ -86,7 +159,10 @@ export function homePage(): string {
     .main-content {
       flex: 1;
       padding: 20px;
-      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
     }
     .sidebar {
       width: 350px;
@@ -119,6 +195,79 @@ export function homePage(): string {
       padding: 15px;
       border-radius: 5px;
       margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+    .intro-text {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      font-size: 0.95em;
+      line-height: 1.6;
+      color: #555;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .intro-close {
+      display: none;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #999;
+      cursor: pointer;
+      padding: 4px 8px;
+      line-height: 1;
+      border-radius: 4px;
+      transition: background-color 0.2s, color 0.2s;
+    }
+    .intro-close:hover {
+      background-color: #f0f0f0;
+      color: #333;
+    }
+    .intro-text p {
+      margin: 0 0 12px 0;
+    }
+    .intro-text p:last-child {
+      margin-bottom: 0;
+    }
+    .language-picker {
+      margin-bottom: 10px;
+      font-size: 0.75em;
+      color: #999;
+    }
+    .language-picker a {
+      color: #999;
+      text-decoration: none;
+      margin-right: 4px;
+      transition: color 0.2s;
+    }
+    .language-picker a:hover {
+      color: #555;
+    }
+    .language-picker a.active {
+      color: #3498db;
+      font-weight: 500;
+    }
+    .language-picker .separator {
+      color: #ddd;
+      margin: 0 2px;
+    }
+    .data-source {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #eee;
+      color: #777;
+    }
+    .data-source a {
+      color: #3498db;
+      text-decoration: none;
+    }
+    .data-source a:hover {
+      text-decoration: underline;
     }
     .stats {
       background: white;
@@ -128,7 +277,8 @@ export function homePage(): string {
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     .map-container {
-      height: calc(100vh - 200px);
+      flex: 1;
+      min-height: 0;
       width: 100%;
       border-radius: 8px;
       overflow: hidden;
@@ -316,10 +466,25 @@ export function homePage(): string {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       cursor: pointer;
       z-index: 1000;
-      font-size: 24px;
       align-items: center;
       justify-content: center;
       transition: background-color 0.2s, transform 0.2s;
+    }
+    .floating-filter-btn::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 20px;
+      position: relative;
+      background: white;
+      mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M22 3H2l8 9.46V19l4 2v-8.54L22 3z'/%3E%3C/svg%3E");
+      -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M22 3H2l8 9.46V19l4 2v-8.54L22 3z'/%3E%3C/svg%3E");
+      mask-size: contain;
+      -webkit-mask-size: contain;
+      mask-repeat: no-repeat;
+      -webkit-mask-repeat: no-repeat;
+      mask-position: center;
+      -webkit-mask-position: center;
     }
     .floating-filter-btn:hover {
       background-color: #2980b9;
@@ -453,6 +618,18 @@ export function homePage(): string {
         margin-bottom: 10px;
         flex-shrink: 0;
       }
+      .intro-text {
+        padding: 15px 40px 15px 15px;
+        margin-bottom: 15px;
+        font-size: 0.9em;
+        flex-shrink: 0;
+      }
+      .intro-text.dismissed {
+        display: none;
+      }
+      .intro-close {
+        display: block;
+      }
       .stats {
         padding: 10px;
         margin-bottom: 10px;
@@ -468,7 +645,22 @@ export function homePage(): string {
 <body>
   <div class="main-container">
     <div class="main-content">
-      <h1>Montreal Outdoor Skating Rinks</h1>
+      <div class="language-picker">
+        <a href="/fr" class="language-link ${lang === "fr" ? "active" : ""}" data-lang="fr">FR</a>
+        <span class="separator">|</span>
+        <a href="/en" class="language-link ${lang === "en" ? "active" : ""}" data-lang="en">EN</a>
+      </div>
+      <div class="intro-text" id="intro-text">
+        <button class="intro-close" id="intro-close" aria-label="${t.closeIntro}">×</button>
+        <p>
+          ${t.introText}
+        </p>
+        <p class="data-source">
+          <small>
+            ${t.dataSourceText} <a href="https://montreal.ca/${lang === "fr" ? "conditions-des-patinoires-exterieures" : "en/outdoor-skating-rinks-conditions"}" target="_blank" rel="noopener noreferrer">${t.dataSourceLink}</a> ${lang === "fr" ? "et mises à jour régulièrement." : "and updated regularly."}
+          </small>
+        </p>
+      </div>
       ${errorHtml}
       <div class="map-container">
         <div id="map"></div>
@@ -476,7 +668,7 @@ export function homePage(): string {
     </div>
     <div class="sidebar">
       <div class="sidebar-header">
-        ${generateFiltersHtml("")}
+        ${generateFiltersHtml("", t)}
       </div>
       <div class="rinks-list-container">
         <div class="rinks-list" id="rinks-list">
@@ -486,9 +678,7 @@ export function homePage(): string {
     </div>
   </div>
   <!-- Floating filter button for mobile -->
-  <button class="floating-filter-btn" id="floating-filter-btn" aria-label="Open filters">
-    ☰
-  </button>
+  <button class="floating-filter-btn" id="floating-filter-btn" aria-label="Open filters"></button>
   <!-- Modal for mobile filters and results -->
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal-content">
@@ -497,7 +687,7 @@ export function homePage(): string {
       </div>
       <div class="modal-body">
         <div class="modal-filters">
-          ${generateFiltersHtml("modal")}
+          ${generateFiltersHtml("modal", t)}
         </div>
         <div class="rinks-list-container">
           <div class="rinks-list" id="modal-rinks-list">
@@ -507,6 +697,11 @@ export function homePage(): string {
       </div>
     </div>
   </div>
+  <script type="module">
+    // Pass language to client-side code
+    window.__LANG__ = "${lang}";
+  </script>
+  <script type="module" src="/public/home.js"></script>
   <script type="module" src="/public/map.js"></script>
 </body>
 </html>

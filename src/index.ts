@@ -9,6 +9,7 @@ import { dirname } from "path";
 import { homePage } from "./pages/home.js";
 import { env } from "./env.js";
 import { getGeocodedRinks } from "./services/rinkGeocoding.js";
+import { isValidLanguage } from "./pages/translations.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -29,6 +30,43 @@ const server = http.createServer((req, res) => {
         res.writeHead(500).end(JSON.stringify({ error: "Internal Server Error" }));
         return;
       }
+    }
+
+    // SEO: robots.txt
+    if (pathname === "/robots.txt") {
+      const robotsTxt = `User-agent: *
+Allow: /
+Sitemap: ${env.SITE_URL}/sitemap.xml
+`;
+      res.writeHead(200, { "Content-Type": "text/plain" }).end(robotsTxt);
+      return;
+    }
+
+    // SEO: sitemap.xml
+    if (pathname === "/sitemap.xml") {
+      const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>${env.SITE_URL}/fr</loc>
+    <lastmod>${new Date().toISOString().split("T")[0]}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="${env.SITE_URL}/fr"/>
+    <xhtml:link rel="alternate" hreflang="en" href="${env.SITE_URL}/en"/>
+  </url>
+  <url>
+    <loc>${env.SITE_URL}/en</loc>
+    <lastmod>${new Date().toISOString().split("T")[0]}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="${env.SITE_URL}/en"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="${env.SITE_URL}/fr"/>
+  </url>
+</urlset>
+`;
+      res.writeHead(200, { "Content-Type": "application/xml" }).end(sitemap);
+      return;
     }
 
     // Static file serving for /public/ paths
@@ -62,10 +100,22 @@ const server = http.createServer((req, res) => {
       }
     }
 
-    // Home page
+    // Redirect root to default language (French), preserving query params
     if (pathname === "" || pathname === "/") {
+      const queryString = parsedUrl.query ? `?${new URLSearchParams(parsedUrl.query as Record<string, string>).toString()}` : "";
+      res.writeHead(302, { Location: `/fr${queryString}` }).end();
+      return;
+    }
+
+    // Language-specific home pages
+    if (pathname === "/fr" || pathname === "/en") {
       try {
-        const html = homePage();
+        const lang = pathname.slice(1); // Remove leading slash
+        if (!isValidLanguage(lang)) {
+          res.writeHead(404).end("Not Found");
+          return;
+        }
+        const html = homePage(lang);
         res.writeHead(200, { "Content-Type": "text/html" }).end(html);
         return;
       } catch (error) {

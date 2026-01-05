@@ -1,6 +1,7 @@
 import Fuse from "fuse.js";
 import type { FuseResultMatch, FuseResult } from "fuse.js";
 import { MarkerClusterer, GridAlgorithm } from "@googlemaps/markerclusterer";
+import { getClientTranslations, getCurrentLanguage } from "./translations.js";
 
 // Client-side type definitions (can't import from server-side types)
 interface Rink {
@@ -38,6 +39,13 @@ let fuse: Fuse<Rink> | null = null;
 let allTypes: readonly string[] = [];
 // Map for fast rink lookup: key is "name|address|type"
 const rinkIndexMap = new Map<string, number>();
+
+/**
+ * Gets translations for the current language (lazy-loaded).
+ */
+function getT() {
+  return getClientTranslations(getCurrentLanguage());
+}
 
 /**
  * Initializes the Google Map.
@@ -103,13 +111,14 @@ function formatRink(
     }
   }
 
+  const t = getT();
   return `
     <div class="rink ${statusClass}" data-rink-index="${index}" data-is-open="${rink.isOpen}">
       <h3><a href="${rink.hyperlink}" target="_blank">${nameHtml}</a></h3>
-      <p><strong>Type:</strong> ${rink.type}</p>
-      <p><strong>Status:</strong> ${rink.iceStatus}</p>
-      <p><strong>Last Updated:</strong> ${rink.lastUpdatedRaw}</p>
-      <p><strong>Address:</strong> ${addressHtml}</p>
+      <p><strong>${t.type}</strong> ${rink.type}</p>
+      <p><strong>${t.status}</strong> ${rink.iceStatus}</p>
+      <p><strong>${t.lastUpdated}</strong> ${rink.lastUpdatedRaw}</p>
+      <p><strong>${t.address}</strong> ${addressHtml}</p>
     </div>
   `;
 }
@@ -118,17 +127,18 @@ function formatRink(
  * Formats a single rink's details (type, status, etc.) for display.
  */
 function formatRinkDetails(rink: Rink, rinkNumber: number | null): string {
-  const label = rinkNumber !== null ? `<strong>Rink ${rinkNumber}:</strong><br>` : "";
+  const t = getT();
+  const label = rinkNumber !== null ? `<strong>${t.rink} ${rinkNumber}:</strong><br>` : "";
   return `
     <div style="margin-top: 8px;">
       ${label}
-      <p style="margin: 4px 0; font-size: 0.9em;"><strong>Type:</strong> ${rink.type}</p>
-      <p style="margin: 4px 0; font-size: 0.9em;"><strong>Status:</strong> ${rink.iceStatus}</p>
-      <p style="margin: 4px 0; font-size: 0.9em;"><strong>Last Updated:</strong> ${rink.lastUpdatedRaw}</p>
+      <p style="margin: 4px 0; font-size: 0.9em;"><strong>${t.type}</strong> ${rink.type}</p>
+      <p style="margin: 4px 0; font-size: 0.9em;"><strong>${t.status}</strong> ${rink.iceStatus}</p>
+      <p style="margin: 4px 0; font-size: 0.9em;"><strong>${t.lastUpdated}</strong> ${rink.lastUpdatedRaw}</p>
       <p style="margin: 4px 0; font-size: 0.9em;">
-        <strong>Open:</strong> 
+        <strong>${t.open}</strong> 
         <span style="color: ${rink.isOpen ? "#27ae60" : "#e74c3c"};">
-          ${rink.isOpen ? "Yes" : "No"}
+          ${rink.isOpen ? t.yes : t.no}
         </span>
       </p>
     </div>
@@ -139,13 +149,14 @@ function formatRinkDetails(rink: Rink, rinkNumber: number | null): string {
  * Creates info window content for multiple rinks at the same location.
  */
 function createInfoWindowContent(rinks: readonly Rink[]): string {
+  const t = getT();
   if (rinks.length === 0) {
-    return `<div style="padding: 10px;">No rink information available.</div>`;
+    return `<div style="padding: 10px;">${t.noRinkInfo}</div>`;
   }
 
   const firstRink = rinks[0];
   const name = firstRink.name;
-  const address = firstRink.address || "Unknown";
+  const address = firstRink.address || t.unknown;
 
   if (rinks.length === 1) {
     // Single rink format: name, underline, address, type, status, etc.
@@ -157,14 +168,14 @@ function createInfoWindowContent(rinks: readonly Rink[]): string {
           </a>
         </h3>
         <hr style="margin: 6px 0; border: none; border-top: 1px solid #ddd;">
-        <p style="margin: 6px 0; font-size: 0.9em;"><strong>Address:</strong> ${address}</p>
-        <p style="margin: 4px 0; font-size: 0.9em;"><strong>Type:</strong> ${firstRink.type}</p>
-        <p style="margin: 4px 0; font-size: 0.9em;"><strong>Status:</strong> ${firstRink.iceStatus}</p>
-        <p style="margin: 4px 0; font-size: 0.9em;"><strong>Last Updated:</strong> ${firstRink.lastUpdatedRaw}</p>
+        <p style="margin: 6px 0; font-size: 0.9em;"><strong>${t.address}</strong> ${address}</p>
+        <p style="margin: 4px 0; font-size: 0.9em;"><strong>${t.type}</strong> ${firstRink.type}</p>
+        <p style="margin: 4px 0; font-size: 0.9em;"><strong>${t.status}</strong> ${firstRink.iceStatus}</p>
+        <p style="margin: 4px 0; font-size: 0.9em;"><strong>${t.lastUpdated}</strong> ${firstRink.lastUpdatedRaw}</p>
         <p style="margin: 4px 0; font-size: 0.9em;">
-          <strong>Open:</strong> 
+          <strong>${t.open}</strong> 
           <span style="color: ${firstRink.isOpen ? "#27ae60" : "#e74c3c"};">
-            ${firstRink.isOpen ? "Yes" : "No"}
+            ${firstRink.isOpen ? t.yes : t.no}
           </span>
         </p>
       </div>
@@ -182,7 +193,7 @@ function createInfoWindowContent(rinks: readonly Rink[]): string {
         </a>
       </h3>
       <hr style="margin: 6px 0; border: none; border-top: 1px solid #ddd;">
-      <p style="margin: 6px 0; font-size: 0.9em;"><strong>Address:</strong> ${address}</p>
+      <p style="margin: 6px 0; font-size: 0.9em;"><strong>${t.address}</strong> ${address}</p>
       ${rinksDetails}
     </div>
   `;
