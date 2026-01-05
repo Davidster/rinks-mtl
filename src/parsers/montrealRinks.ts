@@ -156,7 +156,7 @@ function parseRinksPage(html: string, isFrench: boolean, baseUrl: string): Rink[
     const type = $typeElement.text().trim();
 
     if (!type) {
-      console.log("Failed to parse rink: No type found");
+      console.warn("Failed to parse rink: No type found");
       return;
     }
 
@@ -223,18 +223,18 @@ function parseRinksPage(html: string, isFrench: boolean, baseUrl: string): Rink[
         address: address || "Unknown",
       });
     } else {
-      console.error("Failed to parse rink:");
-      console.error("address", address);
-      console.error("name", name);
-      console.error("hyperlink", hyperlink);
-      console.error("lastUpdatedRaw", lastUpdatedRaw);
-      console.error("lastUpdated", lastUpdated);
-      console.error("badgeText", badgeText);
-      console.error("isOpen", determineIsOpen(badgeText, isFrench));
-      console.error("type", type);
-      console.error("iceStatus", iceStatus);
-      console.error("name", name);
-      console.error("hyperlink", hyperlink);
+      console.warn("Failed to parse rink:");
+      console.warn("address", address);
+      console.warn("name", name);
+      console.warn("hyperlink", hyperlink);
+      console.warn("lastUpdatedRaw", lastUpdatedRaw);
+      console.warn("lastUpdated", lastUpdated);
+      console.warn("badgeText", badgeText);
+      console.warn("isOpen", determineIsOpen(badgeText, isFrench));
+      console.warn("type", type);
+      console.warn("iceStatus", iceStatus);
+      console.warn("name", name);
+      console.warn("hyperlink", hyperlink);
     }
   });
 
