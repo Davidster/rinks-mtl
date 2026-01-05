@@ -175,7 +175,7 @@ export function homePage(): string {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      max-height: 200px;
+      max-height: 120px;
       overflow-y: auto;
       padding: 8px;
       border: 1px solid #ddd;
@@ -353,12 +353,14 @@ export function homePage(): string {
       right: 0;
       background: white;
       border-radius: 20px 20px 0 0;
-      max-height: 90vh;
+      height: 90vh;
+      height: 90dvh; /* Use dynamic viewport height for mobile browsers */
       display: flex;
       flex-direction: column;
       transform: translateY(100%);
       transition: transform 0.3s ease;
       z-index: 2001;
+      overflow: hidden;
     }
     .modal-overlay.open .modal-content {
       transform: translateY(0);
@@ -406,7 +408,7 @@ export function homePage(): string {
       background: white;
       border-bottom: 1px solid #eee;
       overflow-y: auto;
-      max-height: 40vh;
+      overflow-x: hidden;
     }
     .modal-body .rinks-list-container {
       flex: 1;

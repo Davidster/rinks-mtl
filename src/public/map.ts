@@ -755,6 +755,7 @@ function getFilterState(): FilterState | null {
   const checkbox = document.getElementById("show-open-only") as HTMLInputElement;
   const multipleRinksCheckbox = document.getElementById("show-multiple-rinks") as HTMLInputElement;
   const searchInput = document.getElementById("search-input") as HTMLInputElement;
+  const modalSearchInput = document.getElementById("modal-search-input") as HTMLInputElement;
   const typeCheckboxesContainer = document.getElementById("type-filter");
   const lastUpdatedSelect = document.getElementById("last-updated-filter") as HTMLSelectElement;
 
@@ -769,11 +770,14 @@ function getFilterState(): FilterState | null {
 
   const lastUpdatedFilter = (lastUpdatedSelect?.value || "all") as LastUpdatedFilter;
 
+  // Read search term from modal input if it exists and has a value, otherwise use desktop input
+  const searchTerm = modalSearchInput?.value.trim() || searchInput?.value.trim() || "";
+
   return {
     showOpenOnly: checkbox.checked,
     showMultipleRinks: multipleRinksCheckbox.checked,
     selectedTypes,
-    searchTerm: searchInput?.value.trim() || "",
+    searchTerm,
     lastUpdatedFilter,
   };
 }
@@ -864,6 +868,26 @@ function handleSearch(): void {
   }
 
   searchTimeout = setTimeout(() => {
+    // Sync search value between desktop and modal inputs
+    const searchInput = document.getElementById("search-input") as HTMLInputElement;
+    const modalSearchInput = document.getElementById("modal-search-input") as HTMLInputElement;
+
+    if (searchInput && modalSearchInput) {
+      // Sync based on which one was just focused/typed into
+      if (document.activeElement === modalSearchInput) {
+        searchInput.value = modalSearchInput.value;
+      } else if (document.activeElement === searchInput) {
+        modalSearchInput.value = searchInput.value;
+      } else {
+        // If neither is focused, sync modal -> desktop (modal takes precedence on mobile)
+        if (modalSearchInput.value.trim()) {
+          searchInput.value = modalSearchInput.value;
+        } else {
+          modalSearchInput.value = searchInput.value;
+        }
+      }
+    }
+
     applyFilter();
     updateClearButton();
   }, 300);
@@ -920,6 +944,7 @@ function openModal(): void {
     overlay.classList.add("open");
     document.body.style.overflow = "hidden"; // Prevent body scroll
     syncFiltersToModal();
+    updateClearButton(); // Update clear button visibility when modal opens
   }
 }
 
@@ -1229,7 +1254,7 @@ async function init(): Promise<void> {
 
     if (modalSearchInput) {
       modalSearchInput.addEventListener("input", () => {
-        syncFiltersFromModal();
+        updateClearButton(); // Update clear button immediately when typing
         handleSearch();
       });
     }
