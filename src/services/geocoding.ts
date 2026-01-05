@@ -149,7 +149,9 @@ export async function geocodeAddresses(
     if (geocodingData) {
       result.set(address, geocodingData);
       updatedCache[address] = geocodingData;
-      console.info(`[GEOCODE] Successfully geocoded: ${address} -> (${geocodingData.lat}, ${geocodingData.lng})`);
+      console.info(
+        `[GEOCODE] Successfully geocoded: ${address} -> (${geocodingData.lat}, ${geocodingData.lng})`
+      );
     } else {
       console.warn(`[GEOCODE] Failed to geocode address: ${address}`);
     }

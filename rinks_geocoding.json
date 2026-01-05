@@ -19,8 +19,18 @@
     "lat": 45.69387589999999,
     "lng": -73.4928767
   },
+  "1021, rue de la Famille-Dubreuil": {
+    "address": "1021, rue de la Famille-Dubreuil",
+    "lat": 45.69387589999999,
+    "lng": -73.4928767
+  },
   "1050 Boulevard Saint-Jean-Baptiste": {
     "address": "1050 Boulevard Saint-Jean-Baptiste",
+    "lat": 45.6412051,
+    "lng": -73.4991233
+  },
+  "1050, boulevard Saint-Jean-Baptiste": {
+    "address": "1050, boulevard Saint-Jean-Baptiste",
     "lat": 45.6412051,
     "lng": -73.4991233
   },
@@ -29,8 +39,18 @@
     "lat": 45.5467463,
     "lng": -73.67057820000001
   },
+  "10550, avenue de l'Esplanade": {
+    "address": "10550, avenue de l'Esplanade",
+    "lat": 45.5467463,
+    "lng": -73.67057820000001
+  },
   "10660 Boulevard Saint-Michel": {
     "address": "10660 Boulevard Saint-Michel",
+    "lat": 45.5822685,
+    "lng": -73.6484191
+  },
+  "10660, boulevard Saint-Michel": {
+    "address": "10660, boulevard Saint-Michel",
     "lat": 45.5822685,
     "lng": -73.6484191
   },
@@ -43,6 +63,16 @@
     "address": "10985 Avenue Alfred",
     "lat": 45.5994958,
     "lng": -73.623437
+  },
+  "10985, avenue Alfred": {
+    "address": "10985, avenue Alfred",
+    "lat": 45.5994958,
+    "lng": -73.623437
+  },
+  "11000, boulevard Saint-Laurent": {
+    "address": "11000, boulevard Saint-Laurent",
+    "lat": 45.551229,
+    "lng": -73.6762507
   },
   "11098 Boulevard Gouin Est": {
     "address": "11098 Boulevard Gouin Est",
@@ -59,8 +89,18 @@
     "lat": 45.5323602,
     "lng": -73.58947180000001
   },
+  "1115, avenue Laurier Est": {
+    "address": "1115, avenue Laurier Est",
+    "lat": 45.5323602,
+    "lng": -73.58947180000001
+  },
   "11440 Avenue Éthier": {
     "address": "11440 Avenue Éthier",
+    "lat": 45.5995116,
+    "lng": -73.6352294
+  },
+  "11440, avenue Éthier": {
+    "address": "11440, avenue Éthier",
     "lat": 45.5995116,
     "lng": -73.6352294
   },
@@ -69,8 +109,18 @@
     "lat": 45.5199922,
     "lng": -73.6777345
   },
+  "1145, rue Elizabeth": {
+    "address": "1145, rue Elizabeth",
+    "lat": 45.5199922,
+    "lng": -73.6777345
+  },
   "11481 Avenue P.-M.-Favier": {
     "address": "11481 Avenue P.-M.-Favier",
+    "lat": 45.6099176,
+    "lng": -73.61581369999999
+  },
+  "11481, avenue P.-M.-Favier": {
+    "address": "11481, avenue P.-M.-Favier",
     "lat": 45.6099176,
     "lng": -73.61581369999999
   },
@@ -79,8 +129,18 @@
     "lat": 45.60605839999999,
     "lng": -73.6288209
   },
+  "11614, avenue Salk": {
+    "address": "11614, avenue Salk",
+    "lat": 45.60605839999999,
+    "lng": -73.6288209
+  },
   "1172 Avenue Saint-Viateur": {
     "address": "1172 Avenue Saint-Viateur",
+    "lat": 45.5191731,
+    "lng": -73.60468999999999
+  },
+  "1172, avenue Saint-Viateur": {
+    "address": "1172, avenue Saint-Viateur",
     "lat": 45.5191731,
     "lng": -73.60468999999999
   },
@@ -88,6 +148,16 @@
     "address": "12 Rue de la Porte-de-Québec",
     "lat": 45.5131026,
     "lng": -73.5507133
+  },
+  "12, rue de la Porte-de-Québec": {
+    "address": "12, rue de la Porte-de-Québec",
+    "lat": 45.5131026,
+    "lng": -73.5507133
+  },
+  "12100, rue Grenet": {
+    "address": "12100, rue Grenet",
+    "lat": 45.5292887,
+    "lng": -73.7159753
   },
   "12120 Rue Grenet": {
     "address": "12120 Rue Grenet",
@@ -99,8 +169,18 @@
     "lat": 45.54182489999999,
     "lng": -73.6998079
   },
+  "12141, rue Pasteur": {
+    "address": "12141, rue Pasteur",
+    "lat": 45.54182489999999,
+    "lng": -73.6998079
+  },
   "123 Rue Léo-Pétrin": {
     "address": "123 Rue Léo-Pétrin",
+    "lat": 45.4459809,
+    "lng": -73.64863290000001
+  },
+  "123, rue Léo-Pétrin": {
+    "address": "123, rue Léo-Pétrin",
     "lat": 45.4459809,
     "lng": -73.64863290000001
   },
@@ -109,8 +189,18 @@
     "lat": 45.6165723,
     "lng": -73.63071660000001
   },
+  "12576, boulevard Lacordaire": {
+    "address": "12576, boulevard Lacordaire",
+    "lat": 45.6165723,
+    "lng": -73.63071660000001
+  },
   "12600 Avenue Rita-Lévi-Montalcini": {
     "address": "12600 Avenue Rita-Lévi-Montalcini",
+    "lat": 45.6443411,
+    "lng": -73.58851820000001
+  },
+  "12600, avenue Rita-Lévi-Montalcini": {
+    "address": "12600, avenue Rita-Lévi-Montalcini",
     "lat": 45.6443411,
     "lng": -73.58851820000001
   },
@@ -119,13 +209,28 @@
     "lat": 45.512403,
     "lng": -73.56485099999999
   },
+  "127, boulevard De Maisonneuve Est": {
+    "address": "127, boulevard De Maisonneuve Est",
+    "lat": 45.512403,
+    "lng": -73.56485099999999
+  },
   "12800 Rue Brook": {
     "address": "12800 Rue Brook",
     "lat": 45.5103347,
     "lng": -73.84400099999999
   },
+  "12800, rue Brook": {
+    "address": "12800, rue Brook",
+    "lat": 45.5103347,
+    "lng": -73.84400099999999
+  },
   "13840 Rue Gratton": {
     "address": "13840 Rue Gratton",
+    "lat": 45.6667122,
+    "lng": -73.5027853
+  },
+  "13840, rue Gratton": {
+    "address": "13840, rue Gratton",
     "lat": 45.6667122,
     "lng": -73.5027853
   },
@@ -139,8 +244,18 @@
     "lat": 45.4758495,
     "lng": -73.8555305
   },
+  "14899, rue Oakwood": {
+    "address": "14899, rue Oakwood",
+    "lat": 45.4758495,
+    "lng": -73.8555305
+  },
   "1500 Boulevard du Tricentenaire": {
     "address": "1500 Boulevard du Tricentenaire",
+    "lat": 45.6500984,
+    "lng": -73.4998676
+  },
+  "1500, boulevard du Tricentenaire": {
+    "address": "1500, boulevard du Tricentenaire",
     "lat": 45.6500984,
     "lng": -73.4998676
   },
@@ -149,8 +264,18 @@
     "lat": 45.5180085,
     "lng": -73.6911032
   },
+  "1505, rue Cardinal": {
+    "address": "1505, rue Cardinal",
+    "lat": 45.5180085,
+    "lng": -73.6911032
+  },
   "15742 Rue de la Caserne": {
     "address": "15742 Rue de la Caserne",
+    "lat": 45.48067349999999,
+    "lng": -73.8664243
+  },
+  "15742, rue de la Caserne": {
+    "address": "15742, rue de la Caserne",
     "lat": 45.48067349999999,
     "lng": -73.8664243
   },
@@ -159,8 +284,18 @@
     "lat": 45.5202587,
     "lng": -73.6952458
   },
+  "1600, rue Poirier": {
+    "address": "1600, rue Poirier",
+    "lat": 45.5202587,
+    "lng": -73.6952458
+  },
   "1602 Rue de Bellechasse": {
     "address": "1602 Rue de Bellechasse",
+    "lat": 45.53951190000001,
+    "lng": -73.59437080000001
+  },
+  "1602, rue de Bellechasse": {
+    "address": "1602, rue de Bellechasse",
     "lat": 45.53951190000001,
     "lng": -73.59437080000001
   },
@@ -169,13 +304,28 @@
     "lat": 45.5458331,
     "lng": -73.540758
   },
+  "1651, rue Nicolet": {
+    "address": "1651, rue Nicolet",
+    "lat": 45.5458331,
+    "lng": -73.540758
+  },
   "1655 Avenue Papineau": {
     "address": "1655 Avenue Papineau",
     "lat": 45.5240752,
     "lng": -73.5548757
   },
+  "1655, avenue Papineau": {
+    "address": "1655, avenue Papineau",
+    "lat": 45.5240752,
+    "lng": -73.5548757
+  },
   "1740 Avenue O'Brien": {
     "address": "1740 Avenue O'Brien",
+    "lat": 45.5212979,
+    "lng": -73.6908499
+  },
+  "1740, avenue O'Brien": {
+    "address": "1740, avenue O'Brien",
     "lat": 45.5212979,
     "lng": -73.6908499
   },
@@ -189,8 +339,18 @@
     "lat": 45.5136839,
     "lng": -73.6173221
   },
+  "1801, avenue Lajoie": {
+    "address": "1801, avenue Lajoie",
+    "lat": 45.5136839,
+    "lng": -73.6173221
+  },
   "1855 Avenue Émile-Legrand": {
     "address": "1855 Avenue Émile-Legrand",
+    "lat": 45.58063079999999,
+    "lng": -73.5196988
+  },
+  "1855, avenue Émile-Legrand": {
+    "address": "1855, avenue Émile-Legrand",
     "lat": 45.58063079999999,
     "lng": -73.5196988
   },
@@ -199,8 +359,18 @@
     "lat": 45.5262779,
     "lng": -73.5570812
   },
+  "1872, rue Dorion": {
+    "address": "1872, rue Dorion",
+    "lat": 45.5262779,
+    "lng": -73.5570812
+  },
   "1900 Rue Bossuet": {
     "address": "1900 Rue Bossuet",
+    "lat": 45.5692824,
+    "lng": -73.5273133
+  },
+  "1900, rue Bossuet": {
+    "address": "1900, rue Bossuet",
     "lat": 45.5692824,
     "lng": -73.5273133
   },
@@ -209,13 +379,28 @@
     "lat": 45.4467674,
     "lng": -73.680162
   },
+  "1995, croissant Roy": {
+    "address": "1995, croissant Roy",
+    "lat": 45.4467674,
+    "lng": -73.680162
+  },
   "200 Rue Legendre Ouest": {
     "address": "200 Rue Legendre Ouest",
     "lat": 45.5403566,
     "lng": -73.6485194
   },
+  "200, rue Legendre Ouest": {
+    "address": "200, rue Legendre Ouest",
+    "lat": 45.5403566,
+    "lng": -73.6485194
+  },
   "2000 Chemin Remembrance": {
     "address": "2000 Chemin Remembrance",
+    "lat": 45.49841740000001,
+    "lng": -73.59908039999999
+  },
+  "2000, chemin Remembrance": {
+    "address": "2000, chemin Remembrance",
     "lat": 45.49841740000001,
     "lng": -73.59908039999999
   },
@@ -229,8 +414,18 @@
     "lat": 45.4777337,
     "lng": -73.5514227
   },
+  "202, avenue Ash": {
+    "address": "202, avenue Ash",
+    "lat": 45.4777337,
+    "lng": -73.5514227
+  },
   "205 Rue Gary-Carter": {
     "address": "205 Rue Gary-Carter",
+    "lat": 45.5352959,
+    "lng": -73.6284695
+  },
+  "205, rue Gary-Carter": {
+    "address": "205, rue Gary-Carter",
     "lat": 45.5352959,
     "lng": -73.6284695
   },
@@ -239,8 +434,18 @@
     "lat": 45.5156765,
     "lng": -73.71204929999999
   },
+  "2145, rue du Chinook": {
+    "address": "2145, rue du Chinook",
+    "lat": 45.5156765,
+    "lng": -73.71204929999999
+  },
   "2200 Rue Liébert": {
     "address": "2200 Rue Liébert",
+    "lat": 45.5943895,
+    "lng": -73.51912639999999
+  },
+  "2200, rue Liébert": {
+    "address": "2200, rue Liébert",
     "lat": 45.5943895,
     "lng": -73.51912639999999
   },
@@ -249,8 +454,18 @@
     "lat": 45.5481151,
     "lng": -73.5484481
   },
+  "2315, rue Nicolet": {
+    "address": "2315, rue Nicolet",
+    "lat": 45.5481151,
+    "lng": -73.5484481
+  },
   "2333 Rue Mullins": {
     "address": "2333 Rue Mullins",
+    "lat": 45.4790485,
+    "lng": -73.56375299999999
+  },
+  "2333, rue Mullins": {
+    "address": "2333, rue Mullins",
     "lat": 45.4790485,
     "lng": -73.56375299999999
   },
@@ -259,8 +474,18 @@
     "lat": 45.5685008,
     "lng": -73.63468979999999
   },
+  "2400, rue Champdoré": {
+    "address": "2400, rue Champdoré",
+    "lat": 45.5685008,
+    "lng": -73.63468979999999
+  },
   "2455 Rue Larivière": {
     "address": "2455 Rue Larivière",
+    "lat": 45.5329949,
+    "lng": -73.5563082
+  },
+  "2455, rue Larivière": {
+    "address": "2455, rue Larivière",
     "lat": 45.5329949,
     "lng": -73.5563082
   },
@@ -269,13 +494,28 @@
     "lat": 45.54897820000001,
     "lng": -73.5915694
   },
+  "2473, rue Beaubien Est": {
+    "address": "2473, rue Beaubien Est",
+    "lat": 45.54897820000001,
+    "lng": -73.5915694
+  },
   "2523 Rue Théodore": {
     "address": "2523 Rue Théodore",
     "lat": 45.56052409999999,
     "lng": -73.5440063
   },
+  "2523, rue Théodore": {
+    "address": "2523, rue Théodore",
+    "lat": 45.56052409999999,
+    "lng": -73.5440063
+  },
   "2590 Rue Masson": {
     "address": "2590 Rue Masson",
+    "lat": 45.5446956,
+    "lng": -73.5757309
+  },
+  "2590, rue Masson": {
+    "address": "2590, rue Masson",
     "lat": 45.5446956,
     "lng": -73.5757309
   },
@@ -289,8 +529,23 @@
     "lat": 45.529216,
     "lng": -73.6759569
   },
+  "260, rue Elgar": {
+    "address": "260, rue Elgar",
+    "lat": 45.4579072,
+    "lng": -73.5474662
+  },
+  "260, rue Marcotte": {
+    "address": "260, rue Marcotte",
+    "lat": 45.529216,
+    "lng": -73.6759569
+  },
   "2601 Rue Sauvé Est": {
     "address": "2601 Rue Sauvé Est",
+    "lat": 45.5747875,
+    "lng": -73.64130709999999
+  },
+  "2601, rue Sauvé Est": {
+    "address": "2601, rue Sauvé Est",
     "lat": 45.5747875,
     "lng": -73.64130709999999
   },
@@ -299,8 +554,18 @@
     "lat": 45.597015,
     "lng": -73.5273799
   },
+  "2848, rue Liébert": {
+    "address": "2848, rue Liébert",
+    "lat": 45.597015,
+    "lng": -73.5273799
+  },
   "2900 Rue Baker": {
     "address": "2900 Rue Baker",
+    "lat": 45.5176575,
+    "lng": -73.7286637
+  },
+  "2900, rue Baker": {
+    "address": "2900, rue Baker",
     "lat": 45.5176575,
     "lng": -73.7286637
   },
@@ -319,13 +584,28 @@
     "lat": 45.4975298,
     "lng": -73.85251130000002
   },
+  "307, chemin de la Rive-Boisée": {
+    "address": "307, chemin de la Rive-Boisée",
+    "lat": 45.4975298,
+    "lng": -73.85251130000002
+  },
   "3170 Boulevard Pierre-Bernard": {
     "address": "3170 Boulevard Pierre-Bernard",
     "lat": 45.6061609,
     "lng": -73.5261937
   },
+  "3170, boulevard Pierre-Bernard": {
+    "address": "3170, boulevard Pierre-Bernard",
+    "lat": 45.6061609,
+    "lng": -73.5261937
+  },
   "3453 Avenue de Kent": {
     "address": "3453 Avenue de Kent",
+    "lat": 45.50524,
+    "lng": -73.63150399999999
+  },
+  "3453, avenue de Kent": {
+    "address": "3453, avenue de Kent",
     "lat": 45.50524,
     "lng": -73.63150399999999
   },
@@ -339,8 +619,23 @@
     "lat": 45.5525951,
     "lng": -73.5683749
   },
+  "3500, avenue Girouard": {
+    "address": "3500, avenue Girouard",
+    "lat": 45.472745,
+    "lng": -73.6142247
+  },
+  "3500, avenue Laurier Est": {
+    "address": "3500, avenue Laurier Est",
+    "lat": 45.5525951,
+    "lng": -73.5683749
+  },
   "378 Rue Gratton": {
     "address": "378 Rue Gratton",
+    "lat": 45.5013028,
+    "lng": -73.680193
+  },
+  "378, rue Gratton": {
+    "address": "378, rue Gratton",
     "lat": 45.5013028,
     "lng": -73.680193
   },
@@ -349,8 +644,18 @@
     "lat": 45.52731199999999,
     "lng": -73.5703492
   },
+  "3819, avenue Calixa-Lavallée": {
+    "address": "3819, avenue Calixa-Lavallée",
+    "lat": 45.52731199999999,
+    "lng": -73.5703492
+  },
   "4100 Rue Provost": {
     "address": "4100 Rue Provost",
+    "lat": 45.4435915,
+    "lng": -73.70186869999999
+  },
+  "4100, rue Provost": {
+    "address": "4100, rue Provost",
     "lat": 45.4435915,
     "lng": -73.70186869999999
   },
@@ -359,13 +664,28 @@
     "lat": 45.477923,
     "lng": -73.5871021
   },
+  "4115, rue Saint-Jacques": {
+    "address": "4115, rue Saint-Jacques",
+    "lat": 45.477923,
+    "lng": -73.5871021
+  },
   "4355 Rue Fullum": {
     "address": "4355 Rue Fullum",
     "lat": 45.5368174,
     "lng": -73.5668361
   },
+  "4355, rue Fullum": {
+    "address": "4355, rue Fullum",
+    "lat": 45.5368174,
+    "lng": -73.5668361
+  },
   "4365 Rue Cartier": {
     "address": "4365 Rue Cartier",
+    "lat": 45.5333859,
+    "lng": -73.5717796
+  },
+  "4365, rue Cartier": {
+    "address": "4365, rue Cartier",
     "lat": 45.5333859,
     "lng": -73.5717796
   },
@@ -384,8 +704,28 @@
     "lat": 45.5177057,
     "lng": -73.5869513
   },
+  "4422, avenue de l'Esplanade": {
+    "address": "4422, avenue de l'Esplanade",
+    "lat": 45.5177057,
+    "lng": -73.5869513
+  },
+  "4590, rue des Cageux": {
+    "address": "4590, rue des Cageux",
+    "lat": 45.4580886,
+    "lng": -73.880895
+  },
+  "4600, rue de Compiègne": {
+    "address": "4600, rue de Compiègne",
+    "lat": 45.5795717,
+    "lng": -73.6036213
+  },
   "4601 Rue Sherbrooke Est": {
     "address": "4601 Rue Sherbrooke Est",
+    "lat": 45.5641397,
+    "lng": -73.5611957
+  },
+  "4601, rue Sherbrooke Est": {
+    "address": "4601, rue Sherbrooke Est",
     "lat": 45.5641397,
     "lng": -73.5611957
   },
@@ -394,8 +734,18 @@
     "lat": 45.51542,
     "lng": -73.60806000000001
   },
+  "461, chemin de la Côte-Sainte-Catherine": {
+    "address": "461, chemin de la Côte-Sainte-Catherine",
+    "lat": 45.51542,
+    "lng": -73.60806000000001
+  },
   "4644 Rue Beaubien Est": {
     "address": "4644 Rue Beaubien Est",
+    "lat": 45.5682634,
+    "lng": -73.573657
+  },
+  "4644, rue Beaubien Est": {
+    "address": "4644, rue Beaubien Est",
     "lat": 45.5682634,
     "lng": -73.573657
   },
@@ -409,13 +759,28 @@
     "lat": 45.4890378,
     "lng": -73.63294239999999
   },
+  "4907, avenue Saint-Kevin": {
+    "address": "4907, avenue Saint-Kevin",
+    "lat": 45.4890378,
+    "lng": -73.63294239999999
+  },
   "4955 Avenue Trenholme": {
     "address": "4955 Avenue Trenholme",
     "lat": 45.4579257,
     "lng": -73.6491994
   },
+  "4955, avenue Trenholme": {
+    "address": "4955, avenue Trenholme",
+    "lat": 45.4579257,
+    "lng": -73.6491994
+  },
   "5131 Rue Chabot": {
     "address": "5131 Rue Chabot",
+    "lat": 45.53736620000001,
+    "lng": -73.5802345
+  },
+  "5131, rue Chabot": {
+    "address": "5131, rue Chabot",
     "lat": 45.53736620000001,
     "lng": -73.5802345
   },
@@ -429,18 +794,43 @@
     "lat": 45.5710596,
     "lng": -73.560887
   },
+  "5222, boulevard Rosemont": {
+    "address": "5222, boulevard Rosemont",
+    "lat": 45.5710596,
+    "lng": -73.560887
+  },
   "5252 Avenue Decelles": {
     "address": "5252 Avenue Decelles",
     "lat": 45.4972562,
     "lng": -73.6198469
+  },
+  "5252, avenue Decelles": {
+    "address": "5252, avenue Decelles",
+    "lat": 45.4972562,
+    "lng": -73.6198469
+  },
+  "530, avenue Querbes": {
+    "address": "530, avenue Querbes",
+    "lat": 45.52104629999999,
+    "lng": -73.6062626
   },
   "5300 Boulevard Lacordaire": {
     "address": "5300 Boulevard Lacordaire",
     "lat": 45.5815507,
     "lng": -73.5694604
   },
+  "5300, boulevard Robert": {
+    "address": "5300, boulevard Robert",
+    "lat": 45.5852943,
+    "lng": -73.598717
+  },
   "5335 Avenue Clanranald": {
     "address": "5335 Avenue Clanranald",
+    "lat": 45.4832954,
+    "lng": -73.635288
+  },
+  "5335, avenue Clanranald": {
+    "address": "5335, avenue Clanranald",
     "lat": 45.4832954,
     "lng": -73.635288
   },
@@ -449,13 +839,33 @@
     "lat": 45.5281308,
     "lng": -73.7079651
   },
+  "5455, rue de Louisbourg": {
+    "address": "5455, rue de Louisbourg",
+    "lat": 45.5281308,
+    "lng": -73.7079651
+  },
+  "5505, boulevard Pierre-Bernard": {
+    "address": "5505, boulevard Pierre-Bernard",
+    "lat": 45.6091799,
+    "lng": -73.5362907
+  },
   "5515 Rue Lacordaire": {
     "address": "5515 Rue Lacordaire",
     "lat": 45.5775893,
     "lng": -73.5556161
   },
+  "5515, rue Lacordaire": {
+    "address": "5515, rue Lacordaire",
+    "lat": 45.5775893,
+    "lng": -73.5556161
+  },
   "570 Place de la Fontaine": {
     "address": "570 Place de la Fontaine",
+    "lat": 45.4624853,
+    "lng": -73.543975
+  },
+  "570, place de la Fontaine": {
+    "address": "570, place de la Fontaine",
     "lat": 45.4624853,
     "lng": -73.543975
   },
@@ -469,8 +879,18 @@
     "lat": 45.4574388,
     "lng": -73.60474350000001
   },
+  "5925, avenue de Montmagny": {
+    "address": "5925, avenue de Montmagny",
+    "lat": 45.4574388,
+    "lng": -73.60474350000001
+  },
   "6001 Rue Beurling": {
     "address": "6001 Rue Beurling",
+    "lat": 45.4481554,
+    "lng": -73.5847928
+  },
+  "6001, rue Beurling": {
+    "address": "6001, rue Beurling",
     "lat": 45.4481554,
     "lng": -73.5847928
   },
@@ -479,8 +899,18 @@
     "lat": 45.5962864,
     "lng": -73.5982496
   },
+  "6020, boulevard Lavoisier": {
+    "address": "6020, boulevard Lavoisier",
+    "lat": 45.5962864,
+    "lng": -73.5982496
+  },
   "6060 Rue de Honfleur": {
     "address": "6060 Rue de Honfleur",
+    "lat": 45.5905637,
+    "lng": -73.5884047
+  },
+  "6060, rue de Honfleur": {
+    "address": "6060, rue de Honfleur",
     "lat": 45.5905637,
     "lng": -73.5884047
   },
@@ -489,8 +919,18 @@
     "lat": 45.5759811,
     "lng": -73.5395217
   },
+  "6110, rue de Marseille": {
+    "address": "6110, rue de Marseille",
+    "lat": 45.5759811,
+    "lng": -73.5395217
+  },
   "6230 Rue de Terrebonne": {
     "address": "6230 Rue de Terrebonne",
+    "lat": 45.4698462,
+    "lng": -73.6312451
+  },
+  "6230, rue de Terrebonne": {
+    "address": "6230, rue de Terrebonne",
     "lat": 45.4698462,
     "lng": -73.6312451
   },
@@ -499,8 +939,18 @@
     "lat": 45.4200698,
     "lng": -73.6133624
   },
+  "625, 35e Avenue": {
+    "address": "625, 35e Avenue",
+    "lat": 45.4200698,
+    "lng": -73.6133624
+  },
   "6262 Avenue Fielding": {
     "address": "6262 Avenue Fielding",
+    "lat": 45.4723524,
+    "lng": -73.63943139999999
+  },
+  "6262, avenue Fielding": {
+    "address": "6262, avenue Fielding",
     "lat": 45.4723524,
     "lng": -73.63943139999999
   },
@@ -509,13 +959,33 @@
     "lat": 45.5095119,
     "lng": -73.67643439999999
   },
+  "650, boulevard Décarie": {
+    "address": "650, boulevard Décarie",
+    "lat": 45.5095119,
+    "lng": -73.67643439999999
+  },
   "6633 6e Avenue": {
     "address": "6633 6e Avenue",
     "lat": 45.5534365,
     "lng": -73.59160299999999
   },
+  "6633, 6e Avenue": {
+    "address": "6633, 6e Avenue",
+    "lat": 45.5534365,
+    "lng": -73.59160299999999
+  },
+  "6634, rue Clark": {
+    "address": "6634, rue Clark",
+    "lat": 45.5315227,
+    "lng": -73.6120571
+  },
   "6655 Avenue De Gaspé": {
     "address": "6655 Avenue De Gaspé",
+    "lat": 45.5332039,
+    "lng": -73.6092939
+  },
+  "6655, avenue De Gaspé": {
+    "address": "6655, avenue De Gaspé",
     "lat": 45.5332039,
     "lng": -73.6092939
   },
@@ -524,13 +994,28 @@
     "lat": 45.461013,
     "lng": -73.6322764
   },
+  "6800, rue Sherbrooke Ouest": {
+    "address": "6800, rue Sherbrooke Ouest",
+    "lat": 45.461013,
+    "lng": -73.6322764
+  },
   "6825 16e Avenue": {
     "address": "6825 16e Avenue",
     "lat": 45.561279,
     "lng": -73.5864721
   },
+  "6825, 16e Avenue": {
+    "address": "6825, 16e Avenue",
+    "lat": 45.561279,
+    "lng": -73.5864721
+  },
   "695 54e Avenue": {
     "address": "695 54e Avenue",
+    "lat": 45.4439293,
+    "lng": -73.7183
+  },
+  "695, 54e Avenue": {
+    "address": "695, 54e Avenue",
     "lat": 45.4439293,
     "lng": -73.7183
   },
@@ -544,8 +1029,18 @@
     "lat": 45.593264,
     "lng": -73.5553336
   },
+  "7070, avenue de la Nantaise": {
+    "address": "7070, avenue de la Nantaise",
+    "lat": 45.593264,
+    "lng": -73.5553336
+  },
   "7275 Avenue Christophe-Colomb": {
     "address": "7275 Avenue Christophe-Colomb",
+    "lat": 45.5434614,
+    "lng": -73.61299079999999
+  },
+  "7275, avenue Christophe-Colomb": {
+    "address": "7275, avenue Christophe-Colomb",
     "lat": 45.5434614,
     "lng": -73.61299079999999
   },
@@ -554,8 +1049,18 @@
     "lat": 45.5082935,
     "lng": -73.68153640000001
   },
+  "730, rue Buchanan": {
+    "address": "730, rue Buchanan",
+    "lat": 45.5082935,
+    "lng": -73.68153640000001
+  },
   "7480 Rue De Normanville": {
     "address": "7480 Rue De Normanville",
+    "lat": 45.5461821,
+    "lng": -73.6162475
+  },
+  "7480, rue De Normanville": {
+    "address": "7480, rue De Normanville",
     "lat": 45.5461821,
     "lng": -73.6162475
   },
@@ -563,6 +1068,16 @@
     "address": "7501 Avenue Rondeau",
     "lat": 45.6161135,
     "lng": -73.5505948
+  },
+  "7501, avenue Rondeau": {
+    "address": "7501, avenue Rondeau",
+    "lat": 45.6161135,
+    "lng": -73.5505948
+  },
+  "7521, Avenue André-Ampère": {
+    "address": "7521, Avenue André-Ampère",
+    "lat": 45.6306924,
+    "lng": -73.6016164
   },
   "7525 Rue François-Perrault": {
     "address": "7525 Rue François-Perrault",
@@ -579,13 +1094,28 @@
     "lat": 45.5816162,
     "lng": -73.58318899999999
   },
+  "7560, boulevard Lacordaire": {
+    "address": "7560, boulevard Lacordaire",
+    "lat": 45.5816162,
+    "lng": -73.58318899999999
+  },
   "7581 Avenue André-Ampère": {
     "address": "7581 Avenue André-Ampère",
     "lat": 45.63069249999999,
     "lng": -73.6016164
   },
+  "77, rue Bernard Est": {
+    "address": "77, rue Bernard Est",
+    "lat": 45.5282162,
+    "lng": -73.6006751
+  },
   "7770 Boulevard LaSalle": {
     "address": "7770 Boulevard LaSalle",
+    "lat": 45.4267264,
+    "lng": -73.59543479999999
+  },
+  "7770, boulevard LaSalle": {
+    "address": "7770, boulevard LaSalle",
     "lat": 45.4267264,
     "lng": -73.59543479999999
   },
@@ -594,8 +1124,18 @@
     "lat": 45.5546989,
     "lng": -73.61247829999999
   },
+  "7833, avenue des Érables": {
+    "address": "7833, avenue des Érables",
+    "lat": 45.5546989,
+    "lng": -73.61247829999999
+  },
   "7901 Avenue Spalding": {
     "address": "7901 Avenue Spalding",
+    "lat": 45.6033476,
+    "lng": -73.5518532
+  },
+  "7901, avenue Spalding": {
+    "address": "7901, avenue Spalding",
     "lat": 45.6033476,
     "lng": -73.5518532
   },
@@ -604,8 +1144,18 @@
     "lat": 45.5029526,
     "lng": -73.6894349
   },
+  "800, rue Dorais": {
+    "address": "800, rue Dorais",
+    "lat": 45.5029526,
+    "lng": -73.6894349
+  },
   "8151 Avenue de Talcy": {
     "address": "8151 Avenue de Talcy",
+    "lat": 45.6073191,
+    "lng": -73.5594165
+  },
+  "8151, avenue de Talcy": {
+    "address": "8151, avenue de Talcy",
     "lat": 45.6073191,
     "lng": -73.5594165
   },
@@ -614,8 +1164,18 @@
     "lat": 45.5136789,
     "lng": -73.6774519
   },
+  "845, rue Roy": {
+    "address": "845, rue Roy",
+    "lat": 45.5136789,
+    "lng": -73.6774519
+  },
   "8505 Avenue De L'Épée": {
     "address": "8505 Avenue De L'Épée",
+    "lat": 45.5333783,
+    "lng": -73.6420488
+  },
+  "8505, avenue De L'Épée": {
+    "address": "8505, avenue De L'Épée",
     "lat": 45.5333783,
     "lng": -73.6420488
   },
@@ -624,8 +1184,18 @@
     "lat": 45.4335218,
     "lng": -73.63630549999999
   },
+  "8600, rue Hardy": {
+    "address": "8600, rue Hardy",
+    "lat": 45.4335218,
+    "lng": -73.63630549999999
+  },
   "8888 Avenue De Chateaubriand": {
     "address": "8888 Avenue De Chateaubriand",
+    "lat": 45.5487036,
+    "lng": -73.6384429
+  },
+  "8888, avenue De Chateaubriand": {
+    "address": "8888, avenue De Chateaubriand",
     "lat": 45.5487036,
     "lng": -73.6384429
   },
@@ -634,8 +1204,18 @@
     "lat": 45.5144506,
     "lng": -73.66267069999999
   },
+  "900, rue Trudeau": {
+    "address": "900, rue Trudeau",
+    "lat": 45.5144506,
+    "lng": -73.66267069999999
+  },
   "9093 16e Avenue": {
     "address": "9093 16e Avenue",
+    "lat": 45.5750619,
+    "lng": -73.6258848
+  },
+  "9093, 16e Avenue": {
+    "address": "9093, 16e Avenue",
     "lat": 45.5750619,
     "lng": -73.6258848
   },
@@ -644,13 +1224,28 @@
     "lat": 45.6066191,
     "lng": -73.51713769999999
   },
+  "9175, rue Hochelaga": {
+    "address": "9175, rue Hochelaga",
+    "lat": 45.6066191,
+    "lng": -73.51713769999999
+  },
   "9275 Boulevard Pie-IX": {
     "address": "9275 Boulevard Pie-IX",
     "lat": 45.5809877,
     "lng": -73.62318739999999
   },
+  "9275, boulevard Pie-IX": {
+    "address": "9275, boulevard Pie-IX",
+    "lat": 45.5809877,
+    "lng": -73.62318739999999
+  },
   "9300 Rue Saint-Denis": {
     "address": "9300 Rue Saint-Denis",
+    "lat": 45.54762969999999,
+    "lng": -73.6493227
+  },
+  "9300, rue Saint-Denis": {
+    "address": "9300, rue Saint-Denis",
     "lat": 45.54762969999999,
     "lng": -73.6493227
   },
@@ -664,6 +1259,11 @@
     "lat": 45.5594747,
     "lng": -73.6429165
   },
+  "9355, avenue De Galinée": {
+    "address": "9355, avenue De Galinée",
+    "lat": 45.5594747,
+    "lng": -73.6429165
+  },
   "95 Boulevard Gouin Ouest": {
     "address": "95 Boulevard Gouin Ouest",
     "lat": 45.55067589999999,
@@ -674,8 +1274,18 @@
     "lat": 45.5045205,
     "lng": -73.7823709
   },
+  "9625, boulevard Gouin Ouest": {
+    "address": "9625, boulevard Gouin Ouest",
+    "lat": 45.5045205,
+    "lng": -73.7823709
+  },
   "990 Rue Dupuis": {
     "address": "990 Rue Dupuis",
+    "lat": 45.46641839999999,
+    "lng": -73.57494
+  },
+  "990, rue Dupuis": {
+    "address": "990, rue Dupuis",
     "lat": 45.46641839999999,
     "lng": -73.57494
   },
@@ -684,8 +1294,18 @@
     "lat": 45.5605669,
     "lng": -73.6518
   },
+  "9900, avenue Hamel": {
+    "address": "9900, avenue Hamel",
+    "lat": 45.5605669,
+    "lng": -73.6518
+  },
   "999 Avenue d'Oxford": {
     "address": "999 Avenue d'Oxford",
+    "lat": 45.4685076,
+    "lng": -73.6079999
+  },
+  "999, avenue d'Oxford": {
+    "address": "999, avenue d'Oxford",
     "lat": 45.4685076,
     "lng": -73.6079999
   },
@@ -693,6 +1313,11 @@
     "address": "Angle de la rue Centrale et de l'avenue Lacharité",
     "lat": 45.4761201,
     "lng": -73.6643748
+  },
+  "avenue de Mount Vernon": {
+    "address": "avenue de Mount Vernon",
+    "lat": 45.4485676,
+    "lng": -73.6497364
   },
   "Avenue de Mount Vernon": {
     "address": "Avenue de Mount Vernon",
@@ -709,6 +1334,11 @@
     "lat": 45.4219654,
     "lng": -73.6479259
   },
+  "avenue Roskilde": {
+    "address": "avenue Roskilde",
+    "lat": 45.5132434,
+    "lng": -73.6004733
+  },
   "Avenue Roskilde": {
     "address": "Avenue Roskilde",
     "lat": 45.5132434,
@@ -718,6 +1348,11 @@
     "address": "Avenue Yves-Thériault",
     "lat": 45.67899,
     "lng": -73.5008582
+  },
+  "boulevard Gouin Est/87e Avenue": {
+    "address": "boulevard Gouin Est/87e Avenue",
+    "lat": 45.6719594,
+    "lng": -73.5419958
   },
   "Boulevard Saint-Laurent": {
     "address": "Boulevard Saint-Laurent",
@@ -729,10 +1364,20 @@
     "lat": 45.4966461,
     "lng": -73.8909777
   },
+  "rue De Montigny/60e Avenue": {
+    "address": "rue De Montigny/60e Avenue",
+    "lat": 45.6755489,
+    "lng": -73.4971319
+  },
   "Rue Marcel-Raymond": {
     "address": "Rue Marcel-Raymond",
     "lat": 45.6631168,
     "lng": -73.5534082
+  },
+  "rue Penniston": {
+    "address": "rue Penniston",
+    "lat": 45.4392321,
+    "lng": -73.5916719
   },
   "Rue Penniston": {
     "address": "Rue Penniston",

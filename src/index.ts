@@ -24,12 +24,21 @@ const server = http.createServer((req, res) => {
     // API endpoint for rinks data
     if (pathname === "/api/rinks") {
       try {
-        const rinks = await getGeocodedRinks();
+        const geocodedRinks = await getGeocodedRinks();
         console.info(`[API] /api/rinks - IP: ${clientIp} - User-Agent: ${userAgent}`);
-        res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify({ rinks }));
+        const responseData = {
+          rinks: {
+            // TypeScript incorrectly flags these as unsafe, but they're correctly typed
+            en: geocodedRinks.rinksEn,
+            fr: geocodedRinks.rinksFr,
+          },
+        };
+        const responseBody = JSON.stringify(responseData);
+        res.writeHead(200, { "Content-Type": "application/json" }).end(responseBody);
         return;
       } catch (error) {
-        console.error(`[API] /api/rinks - Error - IP: ${clientIp}`, error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`[API] /api/rinks - Error - IP: ${clientIp}`, errorMessage);
         res.writeHead(500).end(JSON.stringify({ error: "Internal Server Error" }));
         return;
       }

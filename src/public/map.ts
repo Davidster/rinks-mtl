@@ -8,7 +8,7 @@ interface Rink {
   readonly type: string;
   readonly iceStatus: string;
   readonly lastUpdatedRaw: string;
-  readonly lastUpdated: string; // ISO date string
+  readonly lastUpdated: string | null; // ISO date string
   readonly isOpen: boolean;
   readonly name: string;
   readonly hyperlink: string;
@@ -18,7 +18,10 @@ interface Rink {
 }
 
 interface RinksResponse {
-  readonly rinks: readonly Rink[];
+  readonly rinks: {
+    readonly en: readonly Rink[];
+    readonly fr: readonly Rink[];
+  };
 }
 
 interface MarkerWithData extends google.maps.Marker {
@@ -723,7 +726,7 @@ function filterRinks(
     }
 
     // Check last updated filter
-    if (!isWithinTimeWindow(rink.lastUpdated, lastUpdatedFilter)) {
+    if (rink.lastUpdated && !isWithinTimeWindow(rink.lastUpdated, lastUpdatedFilter)) {
       return;
     }
 
@@ -1094,7 +1097,8 @@ async function init(): Promise<void> {
     }
 
     const data = (await response.json()) as RinksResponse;
-    rinks = data.rinks;
+    const currentLang = getCurrentLanguage();
+    rinks = data.rinks[currentLang] ?? data.rinks.en;
 
     // Extract unique types and sort them
     const typeSet = new Set<string>();
@@ -1113,7 +1117,7 @@ async function init(): Promise<void> {
     // Initialize Fuse.js for fuzzy search
     fuse = new Fuse(Array.from(rinks), {
       keys: ["name", "address", "type", "iceStatus"],
-      threshold: 0.4, // 0.0 = perfect match, 1.0 = match anything
+      threshold: 0.1, // 0.0 = perfect match, 1.0 = match anything
       includeMatches: true,
       minMatchCharLength: 2,
     });

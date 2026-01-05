@@ -49,4 +49,3 @@ export function getCurrentLanguage(): Language {
   const lang = window.__LANG__;
   return lang === "en" || lang === "fr" ? lang : "fr";
 }
-
