@@ -13,7 +13,8 @@
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "count-visitors": "tsx scripts/countUniqueVisitors.ts"
   },
   "dependencies": {
     "cheerio": "^1.1.2",

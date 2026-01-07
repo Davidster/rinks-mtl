@@ -14,10 +14,40 @@ import { isValidLanguage } from "./pages/translations.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+/**
+ * Extracts the client IP address from the request.
+ * Checks X-Forwarded-For header first (for proxied requests), then falls back to remoteAddress.
+ */
+function getClientIp(req: http.IncomingMessage): string {
+  // Check X-Forwarded-For header (Railway and other proxies set this)
+  const forwardedFor = req.headers["x-forwarded-for"];
+  if (forwardedFor) {
+    // X-Forwarded-For can contain multiple IPs (client, proxy1, proxy2, ...)
+    // The first one is the original client IP
+    const ips = typeof forwardedFor === "string" ? forwardedFor.split(",") : forwardedFor;
+    const firstIp = ips[0]?.trim();
+    if (firstIp) {
+      return firstIp;
+    }
+  }
+
+  // Check X-Real-IP header (alternative header some proxies use)
+  const realIp = req.headers["x-real-ip"];
+  if (realIp) {
+    const ip = typeof realIp === "string" ? realIp.trim() : realIp[0]?.trim();
+    if (ip) {
+      return ip;
+    }
+  }
+
+  // Fall back to socket remote address
+  return req.socket.remoteAddress ?? "unknown";
+}
+
 const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url ?? "", true);
   const pathname = parsedUrl.pathname;
-  const clientIp = req.socket.remoteAddress ?? "unknown";
+  const clientIp = getClientIp(req);
   const userAgent = req.headers["user-agent"] ?? "unknown";
 
   const handleRequest = async () => {
@@ -25,7 +55,7 @@ const server = http.createServer((req, res) => {
     if (pathname === "/api/rinks") {
       try {
         const geocodedRinks = await getGeocodedRinks();
-        console.info(`[API] /api/rinks - IP: ${clientIp} - User-Agent: ${userAgent}`);
+        console.info(`[API] [v2] /api/rinks - IP: ${clientIp} - User-Agent: ${userAgent}`);
         const responseData = {
           rinks: {
             // TypeScript incorrectly flags these as unsafe, but they're correctly typed
@@ -162,7 +192,7 @@ Sitemap: ${env.SITE_URL}/sitemap.xml
           return;
         }
         const html = homePage(lang);
-        console.info(`[VISIT] /${lang} - IP: ${clientIp} - User-Agent: ${userAgent}`);
+        console.info(`[VISIT] [v2] /${lang} - IP: ${clientIp} - User-Agent: ${userAgent}`);
         res.writeHead(200, { "Content-Type": "text/html" }).end(html);
         return;
       } catch (error) {
